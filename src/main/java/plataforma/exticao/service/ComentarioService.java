@@ -1,5 +1,7 @@
 package plataforma.exticao.service;
+
 import org.springframework.stereotype.Service;
+import plataforma.exticao.dtos.ComentarioUpdateRequestDTO;
 import plataforma.exticao.model.Comentario;
 import plataforma.exticao.repository.ComentarioRepository;
 
@@ -31,5 +33,14 @@ public class ComentarioService {
 
     public void deletar(Long id) {
         comentarioRepository.deleteById(id);
+    }
+
+    // Novo método para atualizar
+    public Optional<Comentario> atualizar(Long id, ComentarioUpdateRequestDTO dto) {
+        return comentarioRepository.findById(id).map(comentarioExistente -> {
+            comentarioExistente.setTexto(dto.getTexto());
+            // Não atualiza dataComentario, especieId ou usuário aqui!
+            return comentarioRepository.save(comentarioExistente);
+        });
     }
 }

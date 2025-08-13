@@ -43,11 +43,19 @@ public class AuthController {
         // Se já existe um admin, força o novo usuário a ser USER
         UserRole role = adminExists ? UserRole.USER : UserRole.ADMIN;
 
-        Usuario usuario = new Usuario(dto.login(), passwordEncoder.encode(dto.password()), role);
+        Usuario usuario = new Usuario(
+                dto.login(),
+                passwordEncoder.encode(dto.password()),
+                role, // role ajustada pelo sistema, ignorando a que veio no DTO
+                dto.nomeCompleto(),
+                dto.email()
+        );
+
         userRepository.save(usuario);
 
         return ResponseEntity.ok("Usuário registrado com sucesso");
     }
+
 
 
     //@CrossOrigin("*")

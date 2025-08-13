@@ -1,7 +1,9 @@
 package plataforma.exticao.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import plataforma.exticao.dtos.ComentarioResponseDTO;
 import plataforma.exticao.model.Comentario;
 import plataforma.exticao.service.ComentarioService;
 
@@ -39,5 +41,21 @@ public class ComentarioController {
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         comentarioService.deletar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody @Valid  ComentarioResponseDTO comentarioResponseDTO) {
+        return comentarioService.atualizar(id, comentarioResponseDTO)
+                .map(comentarioAtualizado -> {
+                    ComentarioResponseDTO responseDTO = new ComentarioResponseDTO(
+                            comentarioAtualizado.getId(),
+                            comentarioAtualizado.getTexto(),
+                            comentarioAtualizado.getDataComentario(),
+                            comentarioAtualizado.getEspecie().getId(),
+                            comentarioAtualizado.getAutor().getId()
+                    );
+                    return ResponseEntity.ok(responseDTO);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

@@ -2,6 +2,7 @@ package plataforma.exticao.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import plataforma.exticao.dtos.EspecieRequestDTO;
@@ -31,11 +32,12 @@ public class EspecieController {
     }
 
     // POST: Registrar nova espécie via JSON (DTO)
-    @PostMapping("/registrar")
+    @PostMapping("registrar")
     public Especie registrar(@RequestBody EspecieRequestDTO dto) {
         return especieService.registrar(dto);
     }
 
+    // NOVO: POST registrar espécie com imagem via multipart (para XMLHttpRequest + FormData)
     // NOVO: POST registrar espécie com imagem via multipart (para XMLHttpRequest + FormData)
     @PostMapping(value = "/registrar-multipart", consumes = {"multipart/form-data"})
     public Especie registrarMultipart(

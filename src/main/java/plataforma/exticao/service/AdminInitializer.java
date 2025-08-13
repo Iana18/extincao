@@ -1,4 +1,5 @@
 package plataforma.exticao.service;
+
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,15 +19,21 @@ public class AdminInitializer {
 
     @PostConstruct
     public void init() {
+        String nomeAdmin = "O Maioral";
         String loginAdmin = "admin";
         String senhaAdmin = "admin123";
+        String emailAdmin = "admin@sistema.com";
 
+        // Só cria se não existir
         if (usuarioRepository.findByLogin(loginAdmin).isEmpty()) {
             Usuario admin = new Usuario(
                     loginAdmin,
                     passwordEncoder.encode(senhaAdmin),
-                    UserRole.ADMIN
+                    UserRole.ADMIN,
+                    nomeAdmin,
+                    emailAdmin
             );
+
             usuarioRepository.save(admin);
             System.out.println("✔ Admin criado com sucesso");
         } else {

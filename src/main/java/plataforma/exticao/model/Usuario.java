@@ -17,6 +17,9 @@ public class Usuario implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    private String nomeCompleto;
+
+    private  String email;
     @Column(unique = true)
     private String login;
 
@@ -27,23 +30,42 @@ public class Usuario implements UserDetails {
 
     public Usuario() {}
 
-    public Usuario(String login, String password, UserRole role){
+    public Usuario(String login, String password, UserRole role, String nomeCompleto, String email){
         this.login = login;
         this.password = password;
         this.role = role;
+        this.nomeCompleto= nomeCompleto;
+        this.email = email;
     }
 
     public String getId() {
         return id;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getNomeCompleto() {
+        return nomeCompleto;
+    }
+
+    public void setNomeCompleto(String nomeCompleto) {
+        this.nomeCompleto = nomeCompleto;
     }
 
     public String getLogin() {
         return login;
     }
+
 
     public void setLogin(String login) {
         this.login = login;
