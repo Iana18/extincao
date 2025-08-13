@@ -38,7 +38,7 @@ public class ComentarioService {
     // Novo método para atualizar
     public Optional<Comentario> atualizar(Long id, ComentarioUpdateRequestDTO dto) {
         return comentarioRepository.findById(id).map(comentarioExistente -> {
-            comentarioExistente.setTexto(dto.getTexto());
+            comentarioExistente.setTexto(dto.texto());
             // Não atualiza dataComentario, especieId ou usuário aqui!
             return comentarioRepository.save(comentarioExistente);
         });

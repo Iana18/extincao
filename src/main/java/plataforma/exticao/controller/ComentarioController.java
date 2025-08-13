@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import plataforma.exticao.dtos.ComentarioResponseDTO;
+import plataforma.exticao.dtos.ComentarioUpdateRequestDTO;
 import plataforma.exticao.model.Comentario;
 import plataforma.exticao.service.ComentarioService;
 
@@ -44,8 +45,11 @@ public class ComentarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody @Valid  ComentarioResponseDTO comentarioResponseDTO) {
-        return comentarioService.atualizar(id, comentarioResponseDTO)
+    public ResponseEntity<?> atualizar(
+            @PathVariable Long id,
+            @RequestBody @Valid ComentarioUpdateRequestDTO comentarioUpdateRequestDTO) {
+
+        return comentarioService.atualizar(id, comentarioUpdateRequestDTO)
                 .map(comentarioAtualizado -> {
                     ComentarioResponseDTO responseDTO = new ComentarioResponseDTO(
                             comentarioAtualizado.getId(),
@@ -58,4 +62,5 @@ public class ComentarioController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
 }
