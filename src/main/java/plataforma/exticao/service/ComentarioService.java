@@ -36,11 +36,14 @@ public class ComentarioService {
     }
 
     // Novo método para atualizar
-    public Optional<Comentario> atualizar(Long id, ComentarioUpdateRequestDTO dto) {
-        return comentarioRepository.findById(id).map(comentarioExistente -> {
-            comentarioExistente.setTexto(dto.texto());
-            // Não atualiza dataComentario, especieId ou usuário aqui!
-            return comentarioRepository.save(comentarioExistente);
-        });
+    public Optional<Comentario> atualizar(Long id, ComentarioUpdateRequestDTO  comentarioUpdateRequestDTO, String usuarioIdAutenticado) {
+        return comentarioRepository.findById(id)
+                .filter(comentario -> comentario.getAutor().getId().equals(usuarioIdAutenticado))
+                .map(comentarioExistente -> {
+                    comentarioExistente.setTexto(comentarioUpdateRequestDTO.texto());
+                    return comentarioRepository.save(comentarioExistente);
+                });
     }
+
+
 }

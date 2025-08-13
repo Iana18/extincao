@@ -2,7 +2,7 @@ package plataforma.exticao.dtos;
 
 import jakarta.validation.constraints.*;
 
-public class DenunciaRequestDTO {
+public class DenunciaCreateRequestDTO {
 
     @NotBlank(message = "O título da denúncia é obrigatório.")
     private String titulo;
@@ -22,6 +22,7 @@ public class DenunciaRequestDTO {
     @NotNull(message = "Longitude é obrigatória.")
     private Double longitude;
 
+    // Getters e Setters
 
     public String getTitulo() {
         return titulo;
