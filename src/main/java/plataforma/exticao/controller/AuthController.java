@@ -8,6 +8,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import plataforma.exticao.dtos.AuthenticationDTO;
+import plataforma.exticao.dtos.LoginResponseDTO;
 import plataforma.exticao.dtos.RegisterDTO;
 import plataforma.exticao.model.UserRole;
 import plataforma.exticao.model.Usuario;
@@ -15,7 +16,7 @@ import plataforma.exticao.repository.UsuarioRepository;
 import plataforma.exticao.seguranca.TokenService;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("api/auth")
 public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -62,17 +63,28 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthenticationDTO dto) {
         try {
+            // Autentica usuário
             var authToken = new UsernamePasswordAuthenticationToken(dto.login(), dto.password());
             authenticationManager.authenticate(authToken);
 
-            Usuario usuario = userRepository.findByLogin(dto.login()).get();
+            // Busca o usuário no banco
+            Usuario usuario = userRepository.findByLogin(dto.login())
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+            // Gera o token JWT
             String token = tokenService.generateToken(usuario);
 
-            return ResponseEntity.ok(token);
+            // Cria DTO de resposta com token, login e email
+            var response = new LoginResponseDTO(token, usuario.getLogin(), usuario.getEmail());
+
+            // Retorna como JSON
+            return ResponseEntity.ok(response);
+
         } catch (AuthenticationException e) {
             return ResponseEntity.status(401).body("Login ou senha inválidos");
         }
     }
+
 
 }
 
