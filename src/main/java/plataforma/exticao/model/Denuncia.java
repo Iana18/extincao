@@ -14,6 +14,9 @@ public class Denuncia {
     private Usuario denunciadoPor;
 
     private String titulo;
+    @ManyToOne
+    @JoinColumn(name = "especie_id")
+    private Especie especie;
 
     @Column(length = 2000)
     private String descricao;
@@ -36,8 +39,7 @@ public class Denuncia {
 
     private Double longitude;
 
-    @ManyToOne
-    private Especie especie;
+
 
     public Denuncia() {}
 

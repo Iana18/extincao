@@ -23,7 +23,6 @@ public class EspecieService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // Método original para registrar com JSON
     public Especie registrar(EspecieRequestDTO dto) {
         if (dto.getLatitude() == null || dto.getLongitude() == null) {
             throw new IllegalArgumentException("Localização (latitude e longitude) é obrigatória.");
@@ -48,7 +47,6 @@ public class EspecieService {
         return especieRepository.save(especie);
     }
 
-    // Novo método para registrar via multipart/form-data (usado com XMLHttpRequest + FormData)
     public Especie registrarMultipart(
             String nomeComum,
             String nomeCientifico,
@@ -80,7 +78,6 @@ public class EspecieService {
         especie.setStatusAprovacao(StatusAprovacao.PENDENTE);
 
         try {
-            // Converter imagem para base64
             String base64Imagem = Base64.getEncoder().encodeToString(imagemFile.getBytes());
             especie.setImagem(base64Imagem);
         } catch (Exception e) {
@@ -145,4 +142,42 @@ public class EspecieService {
         }
     }
 
+    // Atualizar espécie (somente admin)
+    public Especie atualizar(Long id, EspecieRequestDTO dto, String usuarioIdAutenticado) {
+        Usuario usuario = usuarioRepository.findById(usuarioIdAutenticado)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + usuarioIdAutenticado));
+
+        if (usuario.getRole() != UserRole.ADMIN) {
+            throw new SecurityException("Usuário não autorizado a atualizar espécies.");
+        }
+
+        Especie especie = especieRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Espécie não encontrada com ID: " + id));
+
+        especie.setNomeComum(dto.getNomeComum());
+        especie.setNomeCientifico(dto.getNomeCientifico());
+        especie.setTipo(dto.getTipo());
+        especie.setDescricao(dto.getDescricao());
+        especie.setStatusConservacao(dto.getStatusConservacao());
+        especie.setImagem(dto.getImagem());
+        especie.setLatitude(dto.getLatitude());
+        especie.setLongitude(dto.getLongitude());
+
+        return especieRepository.save(especie);
+    }
+
+    // Deletar espécie (somente admin)
+    public void deletar(Long id, String usuarioIdAutenticado) {
+        Usuario usuario = usuarioRepository.findById(usuarioIdAutenticado)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + usuarioIdAutenticado));
+
+        if (usuario.getRole() != UserRole.ADMIN) {
+            throw new SecurityException("Usuário não autorizado a deletar espécies.");
+        }
+
+        Especie especie = especieRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Espécie não encontrada com ID: " + id));
+
+        especieRepository.delete(especie);
+    }
 }

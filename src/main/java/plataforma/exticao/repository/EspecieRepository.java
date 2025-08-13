@@ -9,31 +9,28 @@ import plataforma.exticao.model.StatusConservacao;
 import plataforma.exticao.model.TipoEspecie;
 
 import java.util.List;
+
 @Repository
 public interface EspecieRepository extends JpaRepository<Especie, Long> {
-
 
         List<Especie> findByStatusAprovacao(StatusAprovacao status);
 
         List<Especie> findByNomeComumContainingIgnoreCase(String nome);
 
-        List<Especie> findAll();
-
         List<Especie> findByTipo(TipoEspecie tipo);
 
         List<Especie> findByStatusConservacao(StatusConservacao statusConservacao);
 
-
-        List<Especie> findByNomeComumContainingIgnoreCaseAndTipoAndStatusConservacao(String nomeComum, TipoEspecie tipo, StatusConservacao status);
+        List<Especie> findByNomeComumContainingIgnoreCaseAndTipoAndStatusConservacao(
+                String nomeComum, TipoEspecie tipo, StatusConservacao status);
 
         List<Especie> findByNomeComumContainingIgnoreCaseAndTipo(String nomeComum, TipoEspecie tipo);
 
-        List<Especie> findByNomeComumContainingIgnoreCaseAndStatusConservacao(String nomeComum, StatusConservacao status);
+        List<Especie> findByNomeComumContainingIgnoreCaseAndStatusConservacao(
+                String nomeComum, StatusConservacao status);
 
         List<Especie> findByTipoAndStatusConservacao(TipoEspecie tipo, StatusConservacao status);
 
-        //List<Especie> findByNomeComumContainingIgnoreCase(String nomeComum);
-
-
-
+        // Caso queira listar tudo com ordenação:
+        List<Especie> findAll(Sort sort);
 }

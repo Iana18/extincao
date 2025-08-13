@@ -45,6 +45,22 @@ public class PerguntaService {
         return perguntaRepository.save(pergunta);
     }
 
+    // Atualizar pergunta existente
+    public Pergunta atualizar(Long id, Pergunta perguntaAtualizada) {
+        Pergunta perguntaExistente = perguntaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Pergunta não encontrada com ID: " + id));
+
+        perguntaExistente.setTexto(perguntaAtualizada.getTexto());
+        perguntaExistente.setQuiz(perguntaAtualizada.getQuiz());
+        perguntaExistente.setRespostas(perguntaAtualizada.getRespostas());
+
+        if (!validarPergunta(perguntaExistente)) {
+            throw new IllegalArgumentException("A pergunta deve ter 4 respostas, sendo apenas uma correta.");
+        }
+
+        return perguntaRepository.save(perguntaExistente);
+    }
+
     private boolean validarPergunta(Pergunta pergunta) {
         if (pergunta.getRespostas() == null || pergunta.getRespostas().size() != 4) {
             return false;

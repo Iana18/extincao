@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Getter
@@ -44,13 +45,16 @@ public class Especie {
 
     private Double latitude;
     private Double longitude;
+    @OneToMany(mappedBy = "especie", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Denuncia> denuncias;
 
     public Especie() {}
 
     public Especie(String nomeComum, String nomeCientifico, TipoEspecie tipo, String descricao,
                    StatusConservacao statusConservacao, String imagem, LocalDateTime dataRegistro,
                    StatusAprovacao statusAprovacao, LocalDateTime dataAprovacao,
-                   Usuario registradoPor, Usuario aprovadoPor, Double latitude, Double longitude) {
+                   Usuario registradoPor, Usuario aprovadoPor, Double latitude, Double longitude,
+                   List<Denuncia> denuncias) {
         this.nomeComum = nomeComum;
         this.nomeCientifico = nomeCientifico;
         this.tipo = tipo;
@@ -64,8 +68,8 @@ public class Especie {
         this.aprovadoPor = aprovadoPor;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.denuncias = denuncias;
     }
-
     public Long getId() {
         return id;
     }
@@ -176,5 +180,13 @@ public class Especie {
 
     public void setLatitude(Double latitude) {
         this.latitude = latitude;
+    }
+
+    public List<Denuncia> getDenuncias() {
+        return denuncias;
+    }
+
+    public void setDenuncias(List<Denuncia> denuncias) {
+        this.denuncias = denuncias;
     }
 }

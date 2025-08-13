@@ -11,12 +11,10 @@ import plataforma.exticao.repository.EspecieRepository;
 import plataforma.exticao.repository.UsuarioRepository;
 import plataforma.exticao.service.EspecieService;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/especies")
-//@CrossOrigin(origins = "*")
 public class EspecieController {
 
     private final EspecieService especieService;
@@ -37,8 +35,7 @@ public class EspecieController {
         return especieService.registrar(dto);
     }
 
-    // NOVO: POST registrar espécie com imagem via multipart (para XMLHttpRequest + FormData)
-    // NOVO: POST registrar espécie com imagem via multipart (para XMLHttpRequest + FormData)
+    // POST registrar espécie com imagem via multipart/form-data
     @PostMapping(value = "/registrar-multipart", consumes = {"multipart/form-data"})
     public Especie registrarMultipart(
             @RequestParam String nomeComum,
@@ -71,6 +68,35 @@ public class EspecieController {
             Especie aprovada = especieService.aprovar(id, dadosAprovacao);
             return ResponseEntity.ok(aprovada);
         } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // PUT: Atualizar espécie (só admin)
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody EspecieRequestDTO dto) {
+        try {
+            // Pega o ID do usuário autenticado do SecurityContext
+            String usuarioId = SecurityContextHolder.getContext().getAuthentication().getName();
+            Especie atualizada = especieService.atualizar(id, dto, usuarioId);
+            return ResponseEntity.ok(atualizada);
+        } catch (SecurityException se) {
+            return ResponseEntity.status(403).body(se.getMessage());
+        } catch (IllegalArgumentException iae) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // DELETE: Deletar espécie (só admin)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletar(@PathVariable Long id) {
+        try {
+            String usuarioId = SecurityContextHolder.getContext().getAuthentication().getName();
+            especieService.deletar(id, usuarioId);
+            return ResponseEntity.noContent().build();
+        } catch (SecurityException se) {
+            return ResponseEntity.status(403).body(se.getMessage());
+        } catch (IllegalArgumentException iae) {
             return ResponseEntity.notFound().build();
         }
     }
@@ -113,6 +139,7 @@ public class EspecieController {
         return ResponseEntity.ok(especieService.buscarPorStatusConservacao(status));
     }
 
+    // GET: Listar com filtros
     @GetMapping("/Filtros")
     public ResponseEntity<List<Especie>> listarComFiltros(
             @RequestParam(required = false) String nomeComum,
@@ -122,5 +149,4 @@ public class EspecieController {
         List<Especie> especiesFiltradas = especieService.filtrar(nomeComum, tipo, status);
         return ResponseEntity.ok(especiesFiltradas);
     }
-
 }
