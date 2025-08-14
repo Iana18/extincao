@@ -3,15 +3,14 @@ package plataforma.exticao.model;
 import jakarta.persistence.*;
 
 @Entity
-public class Especie {
+public class Tipo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-    String nome;
-    String descricao;
+    private  Long id;
+    private String nome;
+    private  String descricao;
 
     @ManyToOne
-    private  Tipo tipo;
-
+    private  Categoria categoria;
 }

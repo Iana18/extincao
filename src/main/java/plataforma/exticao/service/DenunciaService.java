@@ -4,7 +4,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import plataforma.exticao.model.Denuncia;
-import plataforma.exticao.model.Especie;
+import plataforma.exticao.model.Seres;
 import plataforma.exticao.model.StatusAprovacao;
 import plataforma.exticao.model.Usuario;
 import plataforma.exticao.model.UserRole;
@@ -39,9 +39,9 @@ public class DenunciaService {
         Usuario denunciadoPor = usuarioRepository.findById(denunciadoPorId)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
-        Especie especie = null;
+        Seres especie = null;
         if (especieId != null) {
-            especie = new Especie();
+            especie = new Seres();
             especie.setId(especieId);
         }
 

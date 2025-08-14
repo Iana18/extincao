@@ -2,9 +2,9 @@ package plataforma.exticao.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import plataforma.exticao.dtos.EspecieRequestDTO;
+import plataforma.exticao.dtos.SeresRequestDTO;
 import plataforma.exticao.model.*;
-import plataforma.exticao.repository.EspecieRepository;
+import plataforma.exticao.repository.SeresRepository;
 import plataforma.exticao.repository.UsuarioRepository;
 
 import java.time.LocalDateTime;
@@ -13,41 +13,31 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class EspecieService {
+public class SeresService {
 
-    private final EspecieRepository especieRepository;
+    private final SeresRepository especieRepository;
     private final UsuarioRepository usuarioRepository;
 
-    public EspecieService(EspecieRepository especieRepository, UsuarioRepository usuarioRepository) {
+    public SeresService(SeresRepository especieRepository, UsuarioRepository usuarioRepository) {
         this.especieRepository = especieRepository;
         this.usuarioRepository = usuarioRepository;
     }
 
-    public Especie registrar(EspecieRequestDTO dto) {
+    public Seres registrar(SeresRequestDTO dto) {
         if (dto.getLatitude() == null || dto.getLongitude() == null) {
             throw new IllegalArgumentException("Localização (latitude e longitude) é obrigatória.");
         }
 
-        Usuario usuario = usuarioRepository.findById(dto.getRegistradoPorId())
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + dto.getRegistradoPorId()));
+        Usuario usuario = usuarioRepository.findById(dto.getRegistradoPor().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + dto.getRegistradoPor().getId()));
 
-        Especie especie = new Especie();
-        especie.setNomeComum(dto.getNomeComum());
-        especie.setNomeCientifico(dto.getNomeCientifico());
-        especie.setTipo(dto.getTipo());
-        especie.setDescricao(dto.getDescricao());
-        especie.setStatusConservacao(dto.getStatusConservacao());
-        especie.setImagem(dto.getImagem());
-        especie.setLatitude(dto.getLatitude());
-        especie.setLongitude(dto.getLongitude());
-        especie.setRegistradoPor(usuario);
-        especie.setDataRegistro(LocalDateTime.now());
-        especie.setStatusAprovacao(StatusAprovacao.PENDENTE);
+        Seres seres= new Seres(dto);
 
-        return especieRepository.save(especie);
+        return especieRepository.save(seres);
     }
 
-    public Especie registrarMultipart(
+    /*
+    public Seres registrarMultipart(
             String nomeComum,
             String nomeCientifico,
             TipoEspecie tipo,
@@ -65,7 +55,7 @@ public class EspecieService {
         Usuario usuario = usuarioRepository.findById(registradoPorId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + registradoPorId));
 
-        Especie especie = new Especie();
+        Seres especie = new Seres();
         especie.setNomeComum(nomeComum);
         especie.setNomeCientifico(nomeCientifico);
         especie.setTipo(tipo);
@@ -85,10 +75,10 @@ public class EspecieService {
         }
 
         return especieRepository.save(especie);
-    }
+    }*/
 
-    public Especie aprovar(Long id, Especie dadosAprovacao) {
-        Especie especie = especieRepository.findById(id)
+    public Seres aprovar(Long id, Seres dadosAprovacao) {
+        Seres especie = especieRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Espécie não encontrada com ID: " + id));
 
         especie.setStatusAprovacao(StatusAprovacao.APROVADO);
@@ -98,31 +88,31 @@ public class EspecieService {
         return especieRepository.save(especie);
     }
 
-    public List<Especie> listarTodas() {
+    public List<Seres> listarTodas() {
         return especieRepository.findAll();
     }
 
-    public List<Especie> listarPendentes() {
+    public List<Seres> listarPendentes() {
         return especieRepository.findByStatusAprovacao(StatusAprovacao.PENDENTE);
     }
 
-    public Optional<Especie> buscarPorId(Long id) {
+    public Optional<Seres> buscarPorId(Long id) {
         return especieRepository.findById(id);
     }
 
-    public List<Especie> buscarPorNome(String nome) {
+    public List<Seres> buscarPorNome(String nome) {
         return especieRepository.findByNomeComumContainingIgnoreCase(nome);
     }
 
-    public List<Especie> buscarPorTipo(TipoEspecie tipo) {
+    public List<Seres> buscarPorTipo(TipoEspecie tipo) {
         return especieRepository.findByTipo(tipo);
     }
 
-    public List<Especie> buscarPorStatusConservacao(StatusConservacao status) {
+    public List<Seres> buscarPorStatusConservacao(StatusConservacao status) {
         return especieRepository.findByStatusConservacao(status);
     }
 
-    public List<Especie> filtrar(String nomeComum, TipoEspecie tipo, StatusConservacao status) {
+    public List<Seres> filtrar(String nomeComum, TipoEspecie tipo, StatusConservacao status) {
         if (nomeComum != null && !nomeComum.isEmpty() && tipo != null && status != null) {
             return especieRepository.findByNomeComumContainingIgnoreCaseAndTipoAndStatusConservacao(nomeComum, tipo, status);
         } else if (nomeComum != null && !nomeComum.isEmpty() && tipo != null) {
@@ -143,7 +133,7 @@ public class EspecieService {
     }
 
     // Atualizar espécie (somente admin)
-    public Especie atualizar(Long id, EspecieRequestDTO dto, String usuarioIdAutenticado) {
+    public Seres atualizar(Long id, SeresRequestDTO dto, String usuarioIdAutenticado) {
         Usuario usuario = usuarioRepository.findById(usuarioIdAutenticado)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + usuarioIdAutenticado));
 
@@ -151,19 +141,11 @@ public class EspecieService {
             throw new SecurityException("Usuário não autorizado a atualizar espécies.");
         }
 
-        Especie especie = especieRepository.findById(id)
+         especieRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Espécie não encontrada com ID: " + id));
 
-        especie.setNomeComum(dto.getNomeComum());
-        especie.setNomeCientifico(dto.getNomeCientifico());
-        especie.setTipo(dto.getTipo());
-        especie.setDescricao(dto.getDescricao());
-        especie.setStatusConservacao(dto.getStatusConservacao());
-        especie.setImagem(dto.getImagem());
-        especie.setLatitude(dto.getLatitude());
-        especie.setLongitude(dto.getLongitude());
-
-        return especieRepository.save(especie);
+        Seres seres= new Seres(dto,id);
+        return especieRepository.save(seres);
     }
 
     // Deletar espécie (somente admin)
@@ -175,7 +157,7 @@ public class EspecieService {
             throw new SecurityException("Usuário não autorizado a deletar espécies.");
         }
 
-        Especie especie = especieRepository.findById(id)
+        Seres especie = especieRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Espécie não encontrada com ID: " + id));
 
         especieRepository.delete(especie);

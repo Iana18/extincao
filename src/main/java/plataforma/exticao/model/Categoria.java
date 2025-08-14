@@ -3,7 +3,7 @@ package plataforma.exticao.model;
 import jakarta.persistence.*;
 
 @Entity
-public class Especie {
+public class Categoria {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -12,6 +12,7 @@ public class Especie {
     String descricao;
 
     @ManyToOne
-    private  Tipo tipo;
+    private Tipo especie;
+
 
 }

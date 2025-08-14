@@ -2,13 +2,14 @@ package plataforma.exticao.dtos;
 
 import lombok.Getter;
 import lombok.Setter;
+import plataforma.exticao.model.Especie;
 import plataforma.exticao.model.StatusConservacao;
-import plataforma.exticao.model.StatusAprovacao;
 import plataforma.exticao.model.TipoEspecie;
+import plataforma.exticao.model.Usuario;
 
 @Getter
 @Setter
-public class EspecieRequestDTO {
+public class SeresRequestDTO {
     private String nomeComum;
     private String nomeCientifico;
     private TipoEspecie tipo;
@@ -17,7 +18,8 @@ public class EspecieRequestDTO {
     private String imagem;
     private Double latitude;
     private Double longitude;
-    private String registradoPorId; // ID do usuário que está cadastrando
+    private Usuario registradoPor;
+    private Especie especie;// ID do usuário que está cadastrando
 
 
     public String getNomeComum() {
@@ -84,11 +86,19 @@ public class EspecieRequestDTO {
         this.longitude = longitude;
     }
 
-    public String getRegistradoPorId() {
-        return registradoPorId;
+    public Usuario getRegistradoPor() {
+        return registradoPor;
     }
 
-    public void setRegistradoPorId(String registradoPorId) {
-        this.registradoPorId = registradoPorId;
+    public void setRegistradoPor(Usuario registradoPor) {
+        this.registradoPor = registradoPor;
+    }
+
+    public Especie getEspecie() {
+        return especie;
+    }
+
+    public void setEspecie(Especie especie) {
+        this.especie = especie;
     }
 }
