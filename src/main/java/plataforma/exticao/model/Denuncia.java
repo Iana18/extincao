@@ -16,7 +16,7 @@ public class Denuncia {
     private String titulo;
     @ManyToOne
     @JoinColumn(name = "especie_id")
-    private Especie especie;
+    private Seres especie;
 
     @Column(length = 2000)
     private String descricao;
@@ -44,7 +44,7 @@ public class Denuncia {
     public Denuncia() {}
 
     public Denuncia(String titulo, String descricao, StatusAprovacao statusAprovacao, LocalDateTime dataDenuncia,
-                    LocalDateTime dataAprovacao, Usuario denunciadoPor, Usuario aprovadoPor, Especie especie, String imagem) {
+                    LocalDateTime dataAprovacao, Usuario denunciadoPor, Usuario aprovadoPor, Seres especie, String imagem) {
         this.titulo = titulo;
         this.descricao = descricao;
         this.statusAprovacao = statusAprovacao;
@@ -91,6 +91,6 @@ public class Denuncia {
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-    public Especie getEspecie() { return especie; }
-    public void setEspecie(Especie especie) { this.especie = especie; }
+    public Seres getEspecie() { return especie; }
+    public void setEspecie(Seres especie) { this.especie = especie; }
 }

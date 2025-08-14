@@ -19,11 +19,11 @@ public class Comentario {
     private Usuario autor;
 
     @ManyToOne
-    private Especie especie;
+    private Seres especie;
 
     public Comentario() {}
 
-    public Comentario(String texto, LocalDateTime dataComentario, Usuario autor, Especie especie) {
+    public Comentario(String texto, LocalDateTime dataComentario, Usuario autor, Seres especie) {
         this.texto = texto;
         this.dataComentario = dataComentario;
         this.autor = autor;
@@ -62,11 +62,11 @@ public class Comentario {
         this.autor = autor;
     }
 
-    public Especie getEspecie() {
+    public Seres getEspecie() {
         return especie;
     }
 
-    public void setEspecie(Especie especie) {
+    public void setEspecie(Seres especie) {
         this.especie = especie;
     }
 }

@@ -5,7 +5,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-public class Especie {
+public class Categoria {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,5 +14,7 @@ public class Especie {
     String descricao;
 
     @ManyToOne
-    private Categoria especie;
+    private Tipo especie;
+
+
 }
