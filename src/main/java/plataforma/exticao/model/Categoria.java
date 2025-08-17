@@ -1,5 +1,6 @@
 package plataforma.exticao.model;
 
+<<<<<<< HEAD
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -48,4 +49,23 @@ public class Categoria {
     public void setEspecies(List<Especie> especies) {
         this.especies = especies;
     }
+=======
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+
+public class Categoria {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+    String nome;
+    String descricao;
+
+    @ManyToOne
+    private Tipo especie;
+
+
+>>>>>>> origin/main
 }
