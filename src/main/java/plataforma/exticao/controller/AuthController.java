@@ -33,8 +33,14 @@ public class AuthController {
     //@CrossOrigin("*")
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterDTO dto) {
+        // Verifica se o login já existe
         if (userRepository.findByLogin(dto.login()).isPresent()) {
             return ResponseEntity.badRequest().body("Login já existe");
+        }
+
+        // Verifica se o email já existe
+        if (userRepository.existsByEmail(dto.email())) {
+            return ResponseEntity.badRequest().body("Email já cadastrado");
         }
 
         // Verifica se já existe algum usuário com role ADMIN
@@ -44,10 +50,11 @@ public class AuthController {
         // Se já existe um admin, força o novo usuário a ser USER
         UserRole role = adminExists ? UserRole.USER : UserRole.ADMIN;
 
+        // Cria o usuário
         Usuario usuario = new Usuario(
                 dto.login(),
                 passwordEncoder.encode(dto.password()),
-                role, // role ajustada pelo sistema, ignorando a que veio no DTO
+                role,
                 dto.nomeCompleto(),
                 dto.email()
         );
@@ -56,7 +63,6 @@ public class AuthController {
 
         return ResponseEntity.ok("Usuário registrado com sucesso");
     }
-
 
 
     //@CrossOrigin("*")

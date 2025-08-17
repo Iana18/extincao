@@ -27,12 +27,18 @@ public class Seres {
     @Enumerated(EnumType.STRING)
     private StatusConservacao statusConservacao;
 
+    @ManyToOne
+    private Tipo tipo;  // Referência ao tipo (Terrestre, Aquático, etc.)
+
+    @ManyToOne
+    private Categoria categoria; // Referência à categoria (Animal, Planta, Outro)
+
     @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String imagem;
 
     private LocalDateTime dataRegistro;
-  
+
     @Enumerated(EnumType.STRING)
     private StatusAprovacao statusAprovacao;
 
@@ -51,11 +57,11 @@ public class Seres {
 
     public Seres() {}
 
-    public Seres(String nomeComum, String nomeCientifico, TipoEspecie tipo, String descricao,
+    public Seres(String nomeComum, String nomeCientifico, String descricao,
                  StatusConservacao statusConservacao, String imagem, LocalDateTime dataRegistro,
                  StatusAprovacao statusAprovacao, LocalDateTime dataAprovacao,
                  Usuario registradoPor, Usuario aprovadoPor, Double latitude, Double longitude,
-                 List<Denuncia> denuncias) {
+                 List<Denuncia> denuncias, Tipo tipo,Categoria categoria ) {
         this.nomeComum = nomeComum;
         this.nomeCientifico = nomeCientifico;
 
@@ -70,6 +76,8 @@ public class Seres {
         this.latitude = latitude;
         this.longitude = longitude;
         this.denuncias = denuncias;
+        this.tipo = tipo;
+        this.categoria = categoria;
     }
 
     public  Seres(SeresRequestDTO seres){
@@ -81,25 +89,34 @@ public class Seres {
         this.imagem = seres.getImagem();
         this.dataRegistro = LocalDateTime.now();
         this.statusAprovacao = StatusAprovacao.PENDENTE;
-        this.registradoPor = seres.getRegistradoPor();
+        this.registradoPor = getRegistradoPor();
         this.latitude = seres.getLatitude();
         this.longitude = seres.getLongitude();
+        this.tipo = seres.getTipo();
+        this.categoria=  seres.getCategoria();
     }
 
-    public  Seres(SeresRequestDTO seres,Long id){
-        this.id= id;
-        this.nomeComum = seres.getNomeComum();
-        this.nomeCientifico = seres.getNomeCientifico();
-        this.especie=  seres.getEspecie();
-        this.descricao = seres.getDescricao();
-        this.statusConservacao = seres.getStatusConservacao();
-        this.imagem = seres.getImagem();
+    public Seres(SeresRequestDTO dto, Usuario registradoPor) {
+        this.nomeComum = dto.getNomeComum();
+        this.nomeCientifico = dto.getNomeCientifico();
+        this.especie = dto.getEspecie();
+        this.descricao = dto.getDescricao();
+        this.statusConservacao = dto.getStatusConservacao();
+        this.imagem = dto.getImagem();
         this.dataRegistro = LocalDateTime.now();
         this.statusAprovacao = StatusAprovacao.PENDENTE;
-        this.registradoPor = seres.getRegistradoPor();
-        this.latitude = seres.getLatitude();
-        this.longitude = seres.getLongitude();
+        this.registradoPor = registradoPor; // agora vem do parâmetro
+        this.latitude = dto.getLatitude();
+        this.longitude = dto.getLongitude();
+        this.tipo = dto.getTipo();
+        this.categoria = dto.getCategoria();
     }
+
+    public Seres(SeresRequestDTO dto, Usuario registradoPor, Long id) {
+        this(dto, registradoPor); // chama o outro construtor
+        this.id = id; // atribui o ID depois
+    }
+
 
 
     public Long getId() {
@@ -222,5 +239,21 @@ public class Seres {
 
     public void setEspecie(Especie especie) {
         this.especie = especie;
+    }
+
+    public Tipo getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(Tipo tipo) {
+        this.tipo = tipo;
+    }
+
+    public Categoria getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
     }
 }

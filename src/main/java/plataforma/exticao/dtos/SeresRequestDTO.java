@@ -2,103 +2,61 @@ package plataforma.exticao.dtos;
 
 import lombok.Getter;
 import lombok.Setter;
-import plataforma.exticao.model.Especie;
-import plataforma.exticao.model.StatusConservacao;
-import plataforma.exticao.model.TipoEspecie;
-import plataforma.exticao.model.Usuario;
+import plataforma.exticao.model.*;
 
 @Getter
 @Setter
 public class SeresRequestDTO {
+
     private String nomeComum;
     private String nomeCientifico;
-    private TipoEspecie tipo;
+    private Tipo tipo;
+    private Especie especie;
+    private Categoria categoria;
     private String descricao;
     private StatusConservacao statusConservacao;
-    private String imagem;
     private Double latitude;
     private Double longitude;
-    private Usuario registradoPor;
-    private Especie especie;// ID do usuário que está cadastrando
+    private String imagem;
 
+    // 🔹 Agora só precisamos de login ou email
+    private String usuarioLogin;
+    private String usuarioEmail;
 
-    public String getNomeComum() {
-        return nomeComum;
-    }
+    // Getters e Setters
+    public String getNomeComum() { return nomeComum; }
+    public void setNomeComum(String nomeComum) { this.nomeComum = nomeComum; }
 
-    public void setNomeComum(String nomeComum) {
-        this.nomeComum = nomeComum;
-    }
+    public String getNomeCientifico() { return nomeCientifico; }
+    public void setNomeCientifico(String nomeCientifico) { this.nomeCientifico = nomeCientifico; }
 
-    public String getNomeCientifico() {
-        return nomeCientifico;
-    }
+    public Tipo getTipo() { return tipo; }
+    public void setTipo(Tipo tipo) { this.tipo = tipo; }
 
-    public void setNomeCientifico(String nomeCientifico) {
-        this.nomeCientifico = nomeCientifico;
-    }
+    public Especie getEspecie() { return especie; }
+    public void setEspecie(Especie especie) { this.especie = especie; }
 
-    public TipoEspecie getTipo() {
-        return tipo;
-    }
+    public Categoria getCategoria() { return categoria; }
+    public void setCategoria(Categoria categoria) { this.categoria = categoria; }
 
-    public void setTipo(TipoEspecie tipo) {
-        this.tipo = tipo;
-    }
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public String getDescricao() {
-        return descricao;
-    }
+    public StatusConservacao getStatusConservacao() { return statusConservacao; }
+    public void setStatusConservacao(StatusConservacao statusConservacao) { this.statusConservacao = statusConservacao; }
 
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
 
-    public StatusConservacao getStatusConservacao() {
-        return statusConservacao;
-    }
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-    public void setStatusConservacao(StatusConservacao statusConservacao) {
-        this.statusConservacao = statusConservacao;
-    }
+    public String getImagem() { return imagem; }
+    public void setImagem(String imagem) { this.imagem = imagem; }
 
-    public String getImagem() {
-        return imagem;
-    }
+    public String getUsuarioLogin() { return usuarioLogin; }
+    public void setUsuarioLogin(String usuarioLogin) { this.usuarioLogin = usuarioLogin; }
 
-    public void setImagem(String imagem) {
-        this.imagem = imagem;
-    }
-
-    public Double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-
-    public Usuario getRegistradoPor() {
-        return registradoPor;
-    }
-
-    public void setRegistradoPor(Usuario registradoPor) {
-        this.registradoPor = registradoPor;
-    }
-
-    public Especie getEspecie() {
-        return especie;
-    }
-
-    public void setEspecie(Especie especie) {
-        this.especie = especie;
-    }
+    public String getUsuarioEmail() { return usuarioEmail; }
+    public void setUsuarioEmail(String usuarioEmail) { this.usuarioEmail = usuarioEmail; }
 }

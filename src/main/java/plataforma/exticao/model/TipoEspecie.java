@@ -1,7 +1,8 @@
-package plataforma.exticao.model;
+/*package plataforma.exticao.model;
 
 public enum  TipoEspecie {
     ANIMAL,
     PLANTA,
     OUTRO
 }
+*/

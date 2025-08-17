@@ -1,28 +1,50 @@
 package plataforma.exticao.dtos;
 
-import lombok.Getter;
-import lombok.Setter;
-import plataforma.exticao.model.StatusAprovacao;
-import plataforma.exticao.model.StatusConservacao;
-import plataforma.exticao.model.TipoEspecie;
-
-import java.time.LocalDateTime;
-
-@Getter
-@Setter
 public class EspecieResponseDTO {
+
     private Long id;
-    private String nomeComum;
-    private String nomeCientifico;
-    private TipoEspecie tipo;
+    private String nome;
     private String descricao;
-    private StatusConservacao statusConservacao;
-    private String imagem;
-    private Double latitude;
-    private Double longitude;
-    private StatusAprovacao statusAprovacao;
-    private LocalDateTime dataRegistro;
-    private LocalDateTime dataAprovacao;
-    private String registradoPorLogin;
-    private String aprovadoPorLogin;
+    private Long categoriaId; // ID da categoria relacionada
+
+    public EspecieResponseDTO() {}
+
+    public EspecieResponseDTO(Long id, String nome, String descricao, Long categoriaId) {
+        this.id = id;
+        this.nome = nome;
+        this.descricao = descricao;
+        this.categoriaId = categoriaId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public Long getCategoriaId() {
+        return categoriaId;
+    }
+
+    public void setCategoriaId(Long categoriaId) {
+        this.categoriaId = categoriaId;
+    }
 }
