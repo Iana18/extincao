@@ -49,18 +49,20 @@ public class SeresController {
             @RequestParam Double longitude,
             @RequestParam String usuarioLogin,
             @RequestParam String usuarioEmail,
-            @RequestParam(required = false) MultipartFile imagemFile,
-            @RequestParam String categoriaNome
+            @RequestParam(required = false) MultipartFile imagemFile
     ) {
-        // Buscar Tipo, Especie e Categoria no banco
+        // Buscar Tipo e Especie
         Tipo tipoEntity = tipoRepository.findByNome(tipoNome)
                 .orElseThrow(() -> new RuntimeException("Tipo não encontrado"));
 
         Especie especieEntity = especieRepository.findByNome(especieNome)
                 .orElseThrow(() -> new RuntimeException("Espécie não encontrada"));
 
-        Categoria categoria = categoriaRepository.findByNome(categoriaNome)
-                .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada: " + categoriaNome));
+        // Buscar categoria automaticamente da espécie
+        Categoria categoria = especieEntity.getCategoria(); // Supondo que Especie tenha getCategoria()
+        if (categoria == null) {
+            throw new IllegalArgumentException("Categoria não encontrada para a espécie: " + especieNome);
+        }
 
         // Registrar o Seres usando o service
         Seres novoSeres = seresService.registrarMultipart(
@@ -80,6 +82,7 @@ public class SeresController {
 
         return ResponseEntity.ok(novoSeres);
     }
+
 
     // ------------------------ READ ------------------------
     @GetMapping

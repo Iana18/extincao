@@ -1,5 +1,7 @@
 package plataforma.exticao.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -15,9 +17,11 @@ public class Especie {
 
     @ManyToOne
     @JoinColumn(name = "categoria_id")
+    @JsonBackReference
     private Categoria categoria;
 
     @OneToMany(mappedBy = "especie", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<Tipo> tipos;
 
     // Getters e Setters

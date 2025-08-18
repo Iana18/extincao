@@ -1,50 +1,47 @@
 package plataforma.exticao.dtos;
 
+import java.util.List;
+
 public class EspecieResponseDTO {
 
     private Long id;
     private String nome;
     private String descricao;
-    private Long categoriaId; // ID da categoria relacionada
+    private Long categoriaId;
+    private List<TipoResponseDTO> tipos;
+    private String categoriaNome; // novo campo
 
+    // Ajuste o construtor
+    public EspecieResponseDTO(Long id, String nome, String descricao, Long categoriaId, String categoriaNome, List<TipoResponseDTO> tipos) {
+        this.id = id;
+        this.nome = nome;
+        this.descricao = descricao;
+        this.categoriaId = categoriaId;
+        this.categoriaNome = categoriaNome; // atribuir
+        this.tipos = tipos;
+    }
+
+    // Getter e Setter
+
+
+    // Construtor vazio
     public EspecieResponseDTO() {}
 
-    public EspecieResponseDTO(Long id, String nome, String descricao, Long categoriaId) {
-        this.id = id;
-        this.nome = nome;
-        this.descricao = descricao;
-        this.categoriaId = categoriaId;
-    }
+    public String getCategoriaNome() { return categoriaNome; }
+    public void setCategoriaNome(String categoriaNome) { this.categoriaNome = categoriaNome; }
+    // Getters e Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Long getId() {
-        return id;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public String getNome() {
-        return nome;
-    }
+    public Long getCategoriaId() { return categoriaId; }
+    public void setCategoriaId(Long categoriaId) { this.categoriaId = categoriaId; }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
-
-    public Long getCategoriaId() {
-        return categoriaId;
-    }
-
-    public void setCategoriaId(Long categoriaId) {
-        this.categoriaId = categoriaId;
-    }
+    public List<TipoResponseDTO> getTipos() { return tipos; }
+    public void setTipos(List<TipoResponseDTO> tipos) { this.tipos = tipos; }
 }

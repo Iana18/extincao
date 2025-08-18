@@ -28,10 +28,11 @@ public class TipoController {
     }
 
     @PostMapping("/criar")
-    public Tipo create(@RequestBody Tipo tipo) {
-        return tipoService.save(tipo);
+    public List<Tipo> create(@RequestBody List<Tipo> tipos) {
+        return tipos.stream()
+                .map(tipoService::save) // salva cada tipo individualmente
+                .toList();
     }
-
     @PutMapping("/{id}")
     public ResponseEntity<Tipo> update(@PathVariable Long id, @RequestBody Tipo tipo) {
         try {
@@ -41,6 +42,7 @@ public class TipoController {
             return ResponseEntity.notFound().build();
         }
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

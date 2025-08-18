@@ -2,6 +2,7 @@ package plataforma.exticao.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import plataforma.exticao.dtos.EspecieRequestDTO;
 import plataforma.exticao.dtos.EspecieResponseDTO;
 import plataforma.exticao.service.EspecieService;
 
@@ -20,13 +21,11 @@ public class EspecieController {
 
     // ------------------------ CREATE ------------------------
     @PostMapping("/registrar")
-    public ResponseEntity<EspecieResponseDTO> registrar(
-            @RequestParam String nome,
-            @RequestParam String descricao,
-            @RequestParam Long categoriaId
-    ) {
-        EspecieResponseDTO novaEspecie = especieService.registrar(nome, descricao, categoriaId);
-        return ResponseEntity.ok(novaEspecie);
+    public ResponseEntity<List<EspecieResponseDTO>> registrar(@RequestBody List<EspecieRequestDTO> dtos) {
+        List<EspecieResponseDTO> novasEspecies = dtos.stream()
+                .map(dto -> especieService.registrar(dto.getNome(), dto.getDescricao(), dto.getCategoriaId()))
+                .toList();
+        return ResponseEntity.ok(novasEspecies);
     }
 
     // ------------------------ READ ------------------------
@@ -45,11 +44,9 @@ public class EspecieController {
     @PutMapping("/{id}")
     public ResponseEntity<EspecieResponseDTO> atualizar(
             @PathVariable Long id,
-            @RequestParam String nome,
-            @RequestParam String descricao,
-            @RequestParam Long categoriaId
+            @RequestBody EspecieRequestDTO dto
     ) {
-        EspecieResponseDTO atualizada = especieService.atualizar(id, nome, descricao, categoriaId);
+        EspecieResponseDTO atualizada = especieService.atualizar(id, dto.getNome(), dto.getDescricao(), dto.getCategoriaId());
         return ResponseEntity.ok(atualizada);
     }
 

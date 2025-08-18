@@ -1,5 +1,6 @@
 package plataforma.exticao.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -14,6 +15,7 @@ public class Tipo {
 
     @ManyToOne
     @JoinColumn(name = "especie_id")
+    @JsonBackReference
     private Especie especie;
 
     // Getters e Setters

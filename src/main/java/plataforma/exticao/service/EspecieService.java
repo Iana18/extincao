@@ -3,8 +3,10 @@ package plataforma.exticao.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import plataforma.exticao.dtos.EspecieResponseDTO;
+import plataforma.exticao.dtos.TipoResponseDTO;
 import plataforma.exticao.model.Categoria;
 import plataforma.exticao.model.Especie;
+import plataforma.exticao.model.Tipo;
 import plataforma.exticao.repository.CategoriaRepository;
 import plataforma.exticao.repository.EspecieRepository;
 
@@ -29,7 +31,7 @@ public class EspecieService {
         Especie especie = new Especie();
         especie.setNome(nome);
         especie.setDescricao(descricao);
-        especie.setCategoria(categoria); // corrigido
+        especie.setCategoria(categoria);
 
         Especie salva = especieRepository.save(especie);
         return toDTO(salva);
@@ -58,7 +60,7 @@ public class EspecieService {
 
         especie.setNome(nome);
         especie.setDescricao(descricao);
-        especie.setCategoria(categoria); // corrigido
+        especie.setCategoria(categoria);
 
         return toDTO(especieRepository.save(especie));
     }
@@ -72,11 +74,26 @@ public class EspecieService {
 
     // ------------------------ MAPPER ------------------------
     private EspecieResponseDTO toDTO(Especie especie) {
+        // Converter tipos associados em TipoResponseDTO
+        List<TipoResponseDTO> tiposDTO = especie.getTipos() == null ? List.of() :
+                especie.getTipos().stream()
+                        .map(tipo -> new TipoResponseDTO(
+                                tipo.getId(),
+                                tipo.getNome(),
+                                tipo.getDescricao(),
+                                tipo.getEspecie() != null ? tipo.getEspecie().getId() : null
+                        ))
+                        .collect(Collectors.toList());
+
         return new EspecieResponseDTO(
                 especie.getId(),
                 especie.getNome(),
                 especie.getDescricao(),
-                especie.getCategoria() != null ? especie.getCategoria().getId() : null // corrigido
+                especie.getCategoria() != null ? especie.getCategoria().getId() : null,
+                especie.getCategoria() != null ? especie.getCategoria().getNome() : null, // novo campo
+                tiposDTO
         );
     }
+
+
 }
