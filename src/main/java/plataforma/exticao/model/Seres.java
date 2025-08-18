@@ -119,6 +119,7 @@ public class Seres {
 
 
 
+
     public Long getId() {
         return id;
     }

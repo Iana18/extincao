@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface UsuarioRepository extends JpaRepository<Usuario, String> {
    // Optional<Usuario> findByEmail(String email);
     Optional<Usuario> findByLoginContainingIgnoreCase(String login);
+ Optional<Usuario> findByLoginAndEmail(String login, String email);
 
     Optional<Usuario> findByLogin(String login);
     boolean existsByRole(UserRole role);

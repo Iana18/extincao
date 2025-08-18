@@ -1,7 +1,6 @@
 package plataforma.exticao.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import plataforma.exticao.model.Categoria;
 import plataforma.exticao.service.CategoriaService;
@@ -14,9 +13,10 @@ public class CategoriaController {
 
     @Autowired
     private CategoriaService categoriaService;
+
     @GetMapping
     public List<Categoria> getAll() {
-        return categoriaService.findAll(); // não getAll(), mas findAll()
+        return categoriaService.findAll(); // já está correto
     }
 
     @GetMapping("/{id}")
@@ -27,16 +27,16 @@ public class CategoriaController {
 
     @PostMapping("/criar")
     public Categoria create(@RequestBody Categoria categoria) {
-        return categoriaService.save(categoria);
+        return categoriaService.salvar(categoria);
     }
 
     @PutMapping("/{id}")
     public Categoria update(@PathVariable Long id, @RequestBody Categoria categoria) {
-        return categoriaService.update(id, categoria);
+        return categoriaService.atualizar(id, categoria);
     }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
-        categoriaService.delete(id);
+        categoriaService.deletar(id);
     }
 }

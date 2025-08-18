@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/seres")
+@RequestMapping("/api/seres")
 public class SeresController {
 
     private final SeresService seresService;
@@ -22,14 +22,12 @@ public class SeresController {
     private final EspecieRepository especieRepository;
     private final CategoriaRepository categoriaRepository;
 
-    public SeresController(SeresService seresService,
-                           TipoRepository tipoRepository,
-                           EspecieRepository especieRepository,
-                           CategoriaRepository categoriaRepository) {
+    public SeresController(SeresService seresService, CategoriaRepository categoriaRepository,
+                           EspecieRepository especieRepository, TipoRepository tipoRepository) {
         this.seresService = seresService;
+        this.categoriaRepository = categoriaRepository;
         this.tipoRepository = tipoRepository;
         this.especieRepository = especieRepository;
-        this.categoriaRepository = categoriaRepository;
     }
 
     // ------------------------ CREATE ------------------------
@@ -43,8 +41,8 @@ public class SeresController {
     public ResponseEntity<Seres> registrarMultipart(
             @RequestParam String nomeComum,
             @RequestParam String nomeCientifico,
-            @RequestParam Long tipoId,
-            @RequestParam Long especieId,
+            @RequestParam String tipoNome,
+            @RequestParam String especieNome,
             @RequestParam String descricao,
             @RequestParam String statusConservacao,
             @RequestParam Double latitude,
@@ -52,19 +50,32 @@ public class SeresController {
             @RequestParam String usuarioLogin,
             @RequestParam String usuarioEmail,
             @RequestParam(required = false) MultipartFile imagemFile,
-            @RequestParam Long categoriaId
+            @RequestParam String categoriaNome
     ) {
-        Tipo tipo = tipoRepository.findById(tipoId)
-                .orElseThrow(() -> new RuntimeException("Tipo não encontrado: " + tipoId));
-        Especie especie = especieRepository.findById(especieId)
-                .orElseThrow(() -> new RuntimeException("Especie não encontrada: " + especieId));
-        Categoria categoria = categoriaRepository.findById(categoriaId)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada: " + categoriaId));
+        // Buscar Tipo, Especie e Categoria no banco
+        Tipo tipoEntity = tipoRepository.findByNome(tipoNome)
+                .orElseThrow(() -> new RuntimeException("Tipo não encontrado"));
 
+        Especie especieEntity = especieRepository.findByNome(especieNome)
+                .orElseThrow(() -> new RuntimeException("Espécie não encontrada"));
+
+        Categoria categoria = categoriaRepository.findByNome(categoriaNome)
+                .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada: " + categoriaNome));
+
+        // Registrar o Seres usando o service
         Seres novoSeres = seresService.registrarMultipart(
-                nomeComum, nomeCientifico, tipo, especie, descricao,
-                StatusConservacao.valueOf(statusConservacao.toUpperCase()),
-                latitude, longitude, usuarioLogin, usuarioEmail, imagemFile, categoria
+                nomeComum,
+                nomeCientifico,
+                tipoEntity,
+                especieEntity,
+                descricao,
+                StatusConservacao.valueOf(statusConservacao),
+                latitude,
+                longitude,
+                usuarioLogin,
+                usuarioEmail,
+                imagemFile,
+                categoria
         );
 
         return ResponseEntity.ok(novoSeres);
@@ -93,6 +104,7 @@ public class SeresController {
                                            @RequestBody SeresRequestDTO dto,
                                            @RequestParam String usuarioLogin,
                                            @RequestParam String usuarioEmail) {
+
         Usuario usuarioAutenticado = seresService.buscarUsuario(usuarioLogin, usuarioEmail);
         Seres atualizado = seresService.atualizar(id, dto, usuarioAutenticado);
         return ResponseEntity.ok(atualizado);
@@ -103,6 +115,7 @@ public class SeresController {
     public ResponseEntity<Void> deletar(@PathVariable Long id,
                                         @RequestParam String usuarioLogin,
                                         @RequestParam String usuarioEmail) {
+
         Usuario usuarioAutenticado = seresService.buscarUsuario(usuarioLogin, usuarioEmail);
         seresService.deletar(id, usuarioAutenticado);
         return ResponseEntity.noContent().build();
@@ -113,6 +126,7 @@ public class SeresController {
     public ResponseEntity<Seres> aprovar(@PathVariable Long id,
                                          @RequestParam String usuarioLogin,
                                          @RequestParam String usuarioEmail) {
+
         Usuario aprovadoPor = seresService.buscarUsuario(usuarioLogin, usuarioEmail);
         Seres aprovado = seresService.aprovar(id, aprovadoPor);
         return ResponseEntity.ok(aprovado);
@@ -121,19 +135,18 @@ public class SeresController {
     // ------------------------ FILTRAGEM ------------------------
     @GetMapping("/filtrar")
     public ResponseEntity<List<Seres>> filtrar(@RequestParam(required = false) String nomeComum,
-                                               @RequestParam(required = false) Long especieId,
+                                               @RequestParam(required = false) String especie,
                                                @RequestParam(required = false) String statusConservacao) {
-        Especie especie = null;
-        if (especieId != null) {
-            especie = especieRepository.findById(especieId)
-                    .orElseThrow(() -> new RuntimeException("Especie não encontrada: " + especieId));
+
+        Especie especieEntity = null;
+        if (especie != null) {
+            especieEntity = especieRepository.findByNome(especie)
+                    .orElseThrow(() -> new RuntimeException("Espécie não encontrada"));
         }
 
-        List<Seres> filtrados = seresService.filtrarSeres(
-                nomeComum,
-                especie,
-                statusConservacao != null ? StatusConservacao.valueOf(statusConservacao.toUpperCase()) : null
-        );
+        StatusConservacao statusEnum = statusConservacao != null ? StatusConservacao.valueOf(statusConservacao) : null;
+
+        List<Seres> filtrados = seresService.filtrarSeres(nomeComum, especieEntity, statusEnum);
 
         return ResponseEntity.ok(filtrados);
     }

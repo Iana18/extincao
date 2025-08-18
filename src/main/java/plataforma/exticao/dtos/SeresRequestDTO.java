@@ -2,17 +2,15 @@ package plataforma.exticao.dtos;
 
 import lombok.Getter;
 import lombok.Setter;
-import plataforma.exticao.model.Especie;
-import plataforma.exticao.model.StatusConservacao;
-import plataforma.exticao.model.TipoEspecie;
-import plataforma.exticao.model.Usuario;
+import plataforma.exticao.model.*;
+import plataforma.exticao.model.Tipo;
 
 @Getter
 @Setter
 public class SeresRequestDTO {
     private String nomeComum;
     private String nomeCientifico;
-    private TipoEspecie tipo;
+    private Tipo tipo;
     private String descricao;
     private StatusConservacao statusConservacao;
     private String imagem;
@@ -20,6 +18,25 @@ public class SeresRequestDTO {
     private Double longitude;
     private Usuario registradoPor;
     private Especie especie;// ID do usuário que está cadastrando
+
+    private String usuarioLogin;
+    private String usuarioEmail;
+
+    public String getUsuarioLogin() {
+        return usuarioLogin;
+    }
+
+    public void setUsuarioLogin(String usuarioLogin) {
+        this.usuarioLogin = usuarioLogin;
+    }
+
+    public String getUsuarioEmail() {
+        return usuarioEmail;
+    }
+
+    public void setUsuarioEmail(String usuarioEmail) {
+        this.usuarioEmail = usuarioEmail;
+    }
 
 
     public String getNomeComum() {
@@ -38,11 +55,11 @@ public class SeresRequestDTO {
         this.nomeCientifico = nomeCientifico;
     }
 
-    public TipoEspecie getTipo() {
+    public Tipo getTipo() {
         return tipo;
     }
 
-    public void setTipo(TipoEspecie tipo) {
+    public void setTipo(Tipo tipo) {
         this.tipo = tipo;
     }
 
@@ -100,5 +117,8 @@ public class SeresRequestDTO {
 
     public void setEspecie(Especie especie) {
         this.especie = especie;
+    }
+    public Categoria getCategoria() {
+        return (especie != null) ? especie.getCategoria() : null;
     }
 }
