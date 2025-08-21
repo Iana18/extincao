@@ -1,13 +1,11 @@
 package plataforma.exticao.service;
 
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import plataforma.exticao.model.Denuncia;
-import plataforma.exticao.model.Seres;
-import plataforma.exticao.model.StatusAprovacao;
-import plataforma.exticao.model.Usuario;
-import plataforma.exticao.model.UserRole;
+import plataforma.exticao.dtos.DenunciaCreateRequestDTO;
+import plataforma.exticao.dtos.DenunciaResponseDTO;
+import plataforma.exticao.dtos.UsuarioResponseDTO;
+import plataforma.exticao.model.*;
 import plataforma.exticao.repository.DenunciaRepository;
 import plataforma.exticao.repository.UsuarioRepository;
 
@@ -15,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class DenunciaService {
@@ -27,105 +26,171 @@ public class DenunciaService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public Denuncia registrarMultipart(
-            String titulo,
-            String descricao,
-            Long especieId,
-            String denunciadoPorId,
-            Double latitude,
-            Double longitude,
-            MultipartFile imagemFile
-    ) {
-        Usuario denunciadoPor = usuarioRepository.findById(denunciadoPorId)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+    // ------------------------ CREATE ------------------------
+    public Denuncia registrar(DenunciaCreateRequestDTO dto) {
+        Usuario denunciante = usuarioRepository
+                .findByLoginAndEmail(dto.getUsuarioLogin(), dto.getUsuarioEmail())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Usuário não encontrado com login e email fornecidos"));
 
-        Seres especie = null;
-        if (especieId != null) {
-            especie = new Seres();
-            especie.setId(especieId);
-        }
+        Denuncia denuncia = buildDenunciaFromDTO(dto, denunciante);
+        return denunciaRepository.save(denuncia);
+    }
 
-        String base64Imagem = null;
-        try {
-            if (imagemFile != null && !imagemFile.isEmpty()) {
-                base64Imagem = Base64.getEncoder().encodeToString(imagemFile.getBytes());
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao processar imagem");
-        }
+    public Denuncia registrarMultipart(String titulo, String descricao, Double latitude, Double longitude,
+                                       Long especieId, String usuarioLogin, String usuarioEmail, MultipartFile imagemFile) {
+
+        Usuario denunciante = usuarioRepository
+                .findByLoginAndEmail(usuarioLogin, usuarioEmail)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Usuário não encontrado com login e email fornecidos"));
 
         Denuncia denuncia = new Denuncia();
         denuncia.setTitulo(titulo);
         denuncia.setDescricao(descricao);
-        denuncia.setDenunciadoPor(denunciadoPor);
-        denuncia.setImagem(base64Imagem);
-        denuncia.setEspecie(especie);
         denuncia.setLatitude(latitude);
         denuncia.setLongitude(longitude);
+        denuncia.setDenunciadoPor(denunciante);
         denuncia.setDataDenuncia(LocalDateTime.now());
         denuncia.setStatusAprovacao(StatusAprovacao.PENDENTE);
-        denuncia.setAprovadoPor(null);
+
+        if (especieId != null) {
+            Seres especie = new Seres();
+            especie.setId(especieId);  // ⚡ apenas setar o ID
+            denuncia.setEspecie(especie);
+        }
+
+        if (imagemFile != null && !imagemFile.isEmpty()) {
+            try {
+                String base64Imagem = Base64.getEncoder().encodeToString(imagemFile.getBytes());
+                denuncia.setImagem(base64Imagem);
+            } catch (Exception e) {
+                throw new RuntimeException("Erro ao processar a imagem: " + e.getMessage());
+            }
+        }
 
         return denunciaRepository.save(denuncia);
     }
 
-    public List<Denuncia> listarTodas() {
-        return denunciaRepository.findAll();
-    }
+    public Denuncia buildDenunciaFromDTO(DenunciaCreateRequestDTO dto, Usuario denunciante) {
+        Denuncia denuncia = new Denuncia();
+        denuncia.setTitulo(dto.getTitulo());
+        denuncia.setDescricao(dto.getDescricao());
+        denuncia.setDenunciadoPor(denunciante);
 
-    public List<Denuncia> listarPendentes() {
-        return denunciaRepository.findByStatusAprovacao(StatusAprovacao.PENDENTE);
-    }
-
-    public Optional<Denuncia> buscarPorId(Long id) {
-        return denunciaRepository.findById(id);
-    }
-
-    public Optional<Denuncia> atualizarStatus(Long id, StatusAprovacao novoStatus, String usuarioIdAutenticado) {
-        return denunciaRepository.findById(id).map(denuncia -> {
-            Usuario usuario = usuarioRepository.findById(usuarioIdAutenticado)
-                    .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
-
-            if (usuario.getRole() != UserRole.ADMIN) {
-                throw new SecurityException("Usuário não autorizado a alterar status da denúncia");
-            }
-
-            denuncia.setStatusAprovacao(novoStatus);
-
-            if (novoStatus != StatusAprovacao.PENDENTE) {
-                denuncia.setDataAprovacao(LocalDateTime.now());
-                denuncia.setAprovadoPor(usuario);
-            }
-
-            Denuncia denunciaAtualizada = denunciaRepository.save(denuncia);
-
-            enviarNotificacaoParaUsuario(denunciaAtualizada.getDenunciadoPor(),
-                    "Sua denúncia \"" + denuncia.getTitulo() + "\" foi " +
-                            (novoStatus == StatusAprovacao.APROVADO ? "resolvida." : "rejeitada."));
-
-            return denunciaAtualizada;
-        });
-    }
-
-    public boolean deletar(Long id, String usuarioIdAutenticado) {
-        Optional<Denuncia> denunciaOpt = denunciaRepository.findById(id);
-        if (denunciaOpt.isEmpty()) return false;
-
-        Usuario usuario = usuarioRepository.findById(usuarioIdAutenticado)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
-
-        if (usuario.getRole() != UserRole.ADMIN) {
-            // Só admin pode deletar denúncia
-            return false;
+        if (dto.getEspecieId() != null) {
+            Seres especie = new Seres();
+            especie.setId(dto.getEspecieId()); // ⚡ apenas setar o ID
+            denuncia.setEspecie(especie);
         }
 
-        denunciaRepository.delete(denunciaOpt.get());
-        return true;
+        denuncia.setLatitude(dto.getLatitude());
+        denuncia.setLongitude(dto.getLongitude());
+        denuncia.setDataDenuncia(LocalDateTime.now());
+        denuncia.setStatusAprovacao(StatusAprovacao.PENDENTE);
+
+        return denuncia;
     }
 
+    // ------------------------ READ ------------------------
+    public List<DenunciaResponseDTO> listarTodas() {
+        return denunciaRepository.findAll().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
 
-    private void enviarNotificacaoParaUsuario(Usuario usuario, String mensagem) {
-        // Simulação de envio de notificação (pode ser email, push, websocket etc)
-        System.out.println("Notificação para usuário " + usuario.getLogin() + ": " + mensagem);
+    public List<DenunciaResponseDTO> listarPendentes() {
+        return denunciaRepository.findByStatusAprovacao(StatusAprovacao.PENDENTE).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<DenunciaResponseDTO> buscarPorId(Long id) {
+        return denunciaRepository.findById(id).map(this::mapToDTO);
+    }
+
+    // ------------------------ UPDATE STATUS ------------------------
+    public Denuncia atualizarStatus(Long id, StatusAprovacao novoStatus, Usuario usuarioAutenticado) {
+        validarUsuarioAdmin(usuarioAutenticado);
+
+        Denuncia denuncia = denunciaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Denúncia não encontrada com ID: " + id));
+
+        if (novoStatus == StatusAprovacao.APROVADO || novoStatus == StatusAprovacao.REJEITADA) {
+            denuncia.setDataAprovacao(LocalDateTime.now());
+            denuncia.setAprovadoPor(usuarioAutenticado);
+        }
+
+        if (novoStatus == StatusAprovacao.RESOLVIDA) {
+            denuncia.setDataResolucao(LocalDateTime.now());
+            denuncia.setAprovadoPor(usuarioAutenticado);
+        }
+
+        denuncia.setStatusAprovacao(novoStatus);
+        return denunciaRepository.save(denuncia);
+    }
+
+    public Denuncia aprovarDenuncia(Long id, Usuario usuarioAutenticado) {
+        return atualizarStatus(id, StatusAprovacao.APROVADO, usuarioAutenticado);
+    }
+
+    public Denuncia rejeitarDenuncia(Long id, Usuario usuarioAutenticado) {
+        return atualizarStatus(id, StatusAprovacao.REJEITADA, usuarioAutenticado);
+    }
+
+    public Denuncia resolverDenuncia(Long id, Usuario usuarioAutenticado) {
+        return atualizarStatus(id, StatusAprovacao.RESOLVIDA, usuarioAutenticado);
+    }
+
+    // ------------------------ DELETE ------------------------
+    public void deletar(Long id, Usuario usuarioAutenticado) {
+        validarUsuarioAdmin(usuarioAutenticado);
+        Denuncia denuncia = denunciaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Denúncia não encontrada com ID: " + id));
+        denunciaRepository.delete(denuncia);
+    }
+
+    // ------------------------ HELPERS ------------------------
+    public DenunciaResponseDTO mapToDTO(Denuncia denuncia) {
+        DenunciaResponseDTO dto = new DenunciaResponseDTO();
+        dto.setId(denuncia.getId());
+        dto.setTitulo(denuncia.getTitulo());
+        dto.setDescricao(denuncia.getDescricao());
+        dto.setStatusAprovacao(denuncia.getStatusAprovacao());
+        dto.setDataDenuncia(denuncia.getDataDenuncia());
+        dto.setDataAprovacao(denuncia.getDataAprovacao());
+        dto.setDataResolucao(denuncia.getDataResolucao());
+        dto.setImagem(denuncia.getImagem());
+        dto.setLatitude(denuncia.getLatitude());
+        dto.setLongitude(denuncia.getLongitude());
+        dto.setEspecieId(denuncia.getEspecie() != null ? denuncia.getEspecie().getId() : null);
+
+        if (denuncia.getDenunciadoPor() != null) {
+            dto.setDenunciadoPor(new UsuarioResponseDTO(
+                    denuncia.getDenunciadoPor().getId(),
+                    denuncia.getDenunciadoPor().getLogin(),
+                    denuncia.getDenunciadoPor().getEmail(),
+                    denuncia.getDenunciadoPor().getNomeCompleto(),
+                    denuncia.getDenunciadoPor().getRole()
+            ));
+        }
+
+        if (denuncia.getAprovadoPor() != null) {
+            dto.setAprovadoPor(new UsuarioResponseDTO(
+                    denuncia.getAprovadoPor().getId(),
+                    denuncia.getAprovadoPor().getLogin(),
+                    denuncia.getAprovadoPor().getEmail(),
+                    denuncia.getAprovadoPor().getNomeCompleto(),
+                    denuncia.getAprovadoPor().getRole()
+            ));
+        }
+
+        return dto;
+    }
+
+    private void validarUsuarioAdmin(Usuario usuario) {
+        if (usuario.getRole() != UserRole.ADMIN) {
+            throw new SecurityException("Usuário não autorizado");
+        }
     }
 }

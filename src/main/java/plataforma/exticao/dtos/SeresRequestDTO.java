@@ -16,8 +16,8 @@ public class SeresRequestDTO {
     private String imagem;
     private Double latitude;
     private Double longitude;
-    private Usuario registradoPor;
-    private Especie especie;// ID do usuário que está cadastrando
+    private Usuario registradoPor;// ID do usuário que está cadastrando
+    private Especie especie;
 
     private String usuarioLogin;
     private String usuarioEmail;

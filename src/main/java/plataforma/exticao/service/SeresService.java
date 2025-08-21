@@ -24,7 +24,7 @@ public class SeresService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // ------------------------ CREATE ------------------------
+
     // ------------------------ CREATE ------------------------
     public Seres registrar(SeresRequestDTO dto) {
         validarLocalizacao(dto.getLatitude(), dto.getLongitude());

@@ -13,8 +13,12 @@ public class DenunciaCreateRequestDTO {
 
     private Long especieId;
 
-    @NotBlank(message = "O ID do usuário denunciante é obrigatório.")
-    private String denunciadoPorId;
+    @NotBlank(message = "O login do usuário denunciante é obrigatório.")
+    private String usuarioLogin;
+
+    @NotBlank(message = "O email do usuário denunciante é obrigatório.")
+    @Email(message = "O email deve ser válido.")
+    private String usuarioEmail;
 
     @NotNull(message = "Latitude é obrigatória.")
     private Double latitude;
@@ -22,7 +26,9 @@ public class DenunciaCreateRequestDTO {
     @NotNull(message = "Longitude é obrigatória.")
     private Double longitude;
 
+    // ======================
     // Getters e Setters
+    // ======================
 
     public String getTitulo() {
         return titulo;
@@ -48,12 +54,20 @@ public class DenunciaCreateRequestDTO {
         this.especieId = especieId;
     }
 
-    public String getDenunciadoPorId() {
-        return denunciadoPorId;
+    public String getUsuarioLogin() {
+        return usuarioLogin;
     }
 
-    public void setDenunciadoPorId(String denunciadoPorId) {
-        this.denunciadoPorId = denunciadoPorId;
+    public void setUsuarioLogin(String usuarioLogin) {
+        this.usuarioLogin = usuarioLogin;
+    }
+
+    public String getUsuarioEmail() {
+        return usuarioEmail;
+    }
+
+    public void setUsuarioEmail(String usuarioEmail) {
+        this.usuarioEmail = usuarioEmail;
     }
 
     public Double getLatitude() {
