@@ -2,6 +2,7 @@ package plataforma.exticao.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import plataforma.exticao.model.Quiz;
 import plataforma.exticao.model.UserRole;
 import plataforma.exticao.repository.UsuarioRepository;
 import plataforma.exticao.model.Usuario;
@@ -42,5 +43,12 @@ public class UsuarioService {
 
     public void deletar(String id){
         usuarioRepository.deleteById(id);
+    }
+
+    // Atualiza progresso de quiz do usuário
+    public void atualizarProgresso(Usuario usuario, Quiz quiz) {
+        usuario.getQuizzesCompletos().add(quiz);
+        usuario.setNivelAtual(quiz.getNivel() + 1);
+        usuarioRepository.save(usuario);
     }
 }

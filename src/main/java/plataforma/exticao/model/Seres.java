@@ -1,4 +1,5 @@
 package plataforma.exticao.model;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,19 +21,33 @@ public class Seres {
     private String nomeCientifico;
 
     @ManyToOne
-    private  Especie especie;
+    @JsonIgnoreProperties({"especie"})
+    private Especie especie;
+
+    @ManyToOne
+    @JsonIgnoreProperties({"tipo"})
+    private Tipo tipo;
+
+    @ManyToOne
+    @JsonIgnoreProperties({"categoria"})
+    private Categoria categoria;
+
+    @ManyToOne
+    @JsonIgnoreProperties({"registradoPor"})
+    private Usuario registradoPor;
+
 
     private String descricao;
 
     @Enumerated(EnumType.STRING)
     private StatusConservacao statusConservacao;
 
-    @ManyToOne
+    /*@ManyToOne
     private Tipo tipo;  // Referência ao tipo (Terrestre, Aquático, etc.)
 
     @ManyToOne
     private Categoria categoria; // Referência à categoria (Animal, Planta, Outro)
-
+*/
     @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String imagem;
@@ -44,9 +59,9 @@ public class Seres {
 
     private LocalDateTime dataAprovacao;
 
-    @ManyToOne
+   /* @ManyToOne
     private Usuario registradoPor;
-
+*/
     @ManyToOne
     private Usuario aprovadoPor;
 

@@ -16,7 +16,7 @@ public class DenunciaResponseDTO {
     private LocalDateTime dataResolucao; // novo campo
     private Double latitude;
     private Double longitude;
-    private Long especieId;
+    private EspecieRequestDTO especie;
     private UsuarioResponseDTO denunciadoPor;
     private UsuarioResponseDTO aprovadoPor;
 
@@ -53,8 +53,13 @@ public class DenunciaResponseDTO {
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-    public Long getEspecieId() { return especieId; }
-    public void setEspecieId(Long especieId) { this.especieId = especieId; }
+    public EspecieRequestDTO getEspecie() {
+        return especie;
+    }
+
+    public void setEspecie(EspecieRequestDTO especie) {
+        this.especie = especie;
+    }
 
     public UsuarioResponseDTO getDenunciadoPor() { return denunciadoPor; }
     public void setDenunciadoPor(UsuarioResponseDTO denunciadoPor) { this.denunciadoPor = denunciadoPor; }

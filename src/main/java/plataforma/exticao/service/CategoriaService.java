@@ -25,7 +25,7 @@ public class CategoriaService {
                 tipo.getId(),
                 tipo.getNome(),
                 tipo.getDescricao(),
-                tipo.getEspecie() != null ? tipo.getEspecie().getId() : null
+                tipo.getEspecie() != null ? tipo.getEspecie().getNome() : "—"
         );
     }
 

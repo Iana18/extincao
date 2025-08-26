@@ -1,6 +1,7 @@
 package plataforma.exticao.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ public class Pergunta {
 
     @ManyToOne
     @JoinColumn(name = "quiz_id")
-    @JsonBackReference
+    @JsonIgnoreProperties ("perguntas") // Ignora apenas a lista de perguntas dentro do quiz
     private Quiz quiz;
 
     @OneToMany(mappedBy = "pergunta", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -48,4 +48,13 @@ public class QuizController {
         Optional<Quiz> quiz = quizService.buscarQuizComPerguntasAleatorias(id, quantidade);
         return quiz.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
+
+    // 🔹 Novo endpoint para jogar quiz
+    @PostMapping("/{id}/jogar")
+    public ResponseEntity<?> jogarQuiz(
+            @PathVariable Long id,
+            @RequestBody List<Long> respostasSelecionadas) {
+        var resultado = quizService.jogarQuiz(id, respostasSelecionadas);
+        return resultado.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
 }

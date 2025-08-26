@@ -1,13 +1,19 @@
 package plataforma.exticao.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import plataforma.exticao.dtos.DenunciaCreateRequestDTO;
 import plataforma.exticao.dtos.DenunciaResponseDTO;
 import plataforma.exticao.model.Denuncia;
 import plataforma.exticao.model.Usuario;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import plataforma.exticao.service.DenunciaService;
+import plataforma.exticao.service.UsuarioService;
 
 import java.util.List;
 
@@ -16,9 +22,11 @@ import java.util.List;
 public class DenunciaController {
 
     private final DenunciaService denunciaService;
+    private  final UsuarioService usuarioService;
 
-    public DenunciaController(DenunciaService denunciaService) {
+    public DenunciaController(DenunciaService denunciaService, UsuarioService  usuarioService) {
         this.denunciaService = denunciaService;
+        this.usuarioService= usuarioService;
     }
 
     // ------------------------ CREATE ------------------------
@@ -69,14 +77,24 @@ public class DenunciaController {
 
     // ------------------------ UPDATE STATUS ------------------------
     @PatchMapping("/{id}/aprovar")
-    public ResponseEntity<DenunciaResponseDTO> aprovarDenuncia(@PathVariable Long id,
-                                                               @RequestBody Usuario usuarioAutenticado) {
+    public ResponseEntity<DenunciaResponseDTO> aprovarDenuncia(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario // usuário autenticado
+    ) {
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // aqui você já tem o login do usuário autenticado
+        String loginUsuario = usuario.getLogin();
+
         return ResponseEntity.ok(
                 denunciaService.mapToDTO(
-                        denunciaService.aprovarDenuncia(id, usuarioAutenticado)
+                        denunciaService.aprovarDenuncia(id, usuario)
                 )
         );
     }
+
 
     @PatchMapping("/{id}/rejeitar")
     public ResponseEntity<DenunciaResponseDTO> rejeitarDenuncia(@PathVariable Long id,
@@ -101,8 +119,16 @@ public class DenunciaController {
     // ------------------------ DELETE ------------------------
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id,
-                                        @RequestBody Usuario usuarioAutenticado) {
-        denunciaService.deletar(id, usuarioAutenticado);
+                                        Authentication authentication) {
+        String login = authentication.getName(); // pega login do JWT
+        denunciaService.deletar(id, login);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/buscar")
+    public ResponseEntity<List<DenunciaResponseDTO>> buscar(@RequestParam("q") String termo) {
+        List<DenunciaResponseDTO> resultados = denunciaService.buscarPorTituloOuDescricao(termo);
+        return ResponseEntity.ok(resultados);
+    }
+
 }

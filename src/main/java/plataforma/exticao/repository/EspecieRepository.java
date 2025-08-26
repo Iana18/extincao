@@ -11,9 +11,10 @@ import java.util.Optional;
 @Repository
 public interface EspecieRepository extends JpaRepository<Especie, Long> {
 
-    Optional<Especie> findByNome(String nome);
+   // Optional<Especie> findByNome(String nome); // busca única
 
-    // Busca todas as espécies já carregando categoria e tipos
-    @EntityGraph (attributePaths = {"categoria", "tipos"})
+    List<Especie> findByNomeInIgnoreCase(List<String> nomes); // busca múltiplas
+
+    @EntityGraph(attributePaths = {"categoria", "tipos"})
     List<Especie> findAll();
 }

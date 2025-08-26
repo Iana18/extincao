@@ -81,16 +81,16 @@ public class EspecieService {
                                 tipo.getId(),
                                 tipo.getNome(),
                                 tipo.getDescricao(),
-                                tipo.getEspecie() != null ? tipo.getEspecie().getId() : null
+                                tipo.getEspecie() != null ? tipo.getEspecie().getNome() : "—"
                         ))
-                        .collect(Collectors.toList());
+                        .toList();
 
         return new EspecieResponseDTO(
                 especie.getId(),
                 especie.getNome(),
                 especie.getDescricao(),
                 especie.getCategoria() != null ? especie.getCategoria().getId() : null,
-                especie.getCategoria() != null ? especie.getCategoria().getNome() : null, // novo campo
+                especie.getCategoria() != null ? especie.getCategoria().getNome() : null,
                 tiposDTO
         );
     }

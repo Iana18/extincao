@@ -1,10 +1,12 @@
 package plataforma.exticao.service;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import plataforma.exticao.dtos.SeresRequestDTO;
 import plataforma.exticao.model.*;
+import plataforma.exticao.repository.EspecieRepository;
 import plataforma.exticao.repository.SeresRepository;
 import plataforma.exticao.repository.UsuarioRepository;
 
@@ -12,42 +14,41 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class SeresService {
 
     private final SeresRepository seresRepository;
-    private final UsuarioRepository usuarioRepository; // necessário para buscar usuário
+    private final UsuarioRepository usuarioRepository;
+    private final EspecieRepository especieRepository;
 
-    public SeresService(SeresRepository seresRepository, UsuarioRepository usuarioRepository) {
+    public SeresService(SeresRepository seresRepository, UsuarioRepository usuarioRepository,
+                        EspecieRepository especieRepository) {
         this.seresRepository = seresRepository;
         this.usuarioRepository = usuarioRepository;
+        this.especieRepository = especieRepository;
     }
-
 
     // ------------------------ CREATE ------------------------
     public Seres registrar(SeresRequestDTO dto) {
         validarLocalizacao(dto.getLatitude(), dto.getLongitude());
 
-        // Pega o usuário diretamente do DTO
         Usuario usuario = dto.getRegistradoPor();
         if (usuario == null) {
             throw new IllegalArgumentException("Usuário registrado é obrigatório.");
         }
 
-        // Constrói o Seres a partir do DTO
         Seres seres = buildSeresFromDTO(dto, usuario);
-
         return seresRepository.save(seres);
     }
 
-
     public Seres registrarMultipart(String nomeComum, String nomeCientifico, Tipo tipo, Especie especie,
                                     String descricao, StatusConservacao statusConservacao, Double latitude,
-                                    Double longitude, String usuarioLogin, String usuarioEmail, MultipartFile imagemFile, Categoria categoria) {
+                                    Double longitude, String usuarioLogin, String usuarioEmail,
+                                    MultipartFile imagemFile, Categoria categoria) {
 
         validarLocalizacao(latitude, longitude);
-
         Usuario registradoPor = buscarUsuario(usuarioLogin, usuarioEmail);
 
         Seres seres = new Seres();
@@ -78,7 +79,7 @@ public class SeresService {
 
     // ------------------------ READ ------------------------
     public List<Seres> listarTodas() {
-        return seresRepository.findAll();
+        return seresRepository.findAll(Sort.by(Sort.Direction.ASC, "nomeComum"));
     }
 
     public List<Seres> listarPendentes() {
@@ -101,14 +102,20 @@ public class SeresService {
         existente.setNomeComum(dto.getNomeComum());
         existente.setNomeCientifico(dto.getNomeCientifico());
         existente.setTipo(dto.getTipo());
-        existente.setCategoria(dto.getCategoria());
+        existente.setCategoria(dto.getEspecie() != null ? dto.getEspecie().getCategoria() : existente.getCategoria());
         existente.setDescricao(dto.getDescricao());
         existente.setStatusConservacao(dto.getStatusConservacao());
         existente.setLatitude(dto.getLatitude());
         existente.setLongitude(dto.getLongitude());
 
+        // Atualizar imagem apenas se vier uma nova
+        if (dto.getImagem() != null && !dto.getImagem().isEmpty()) {
+            existente.setImagem(dto.getImagem());
+        }
+
         return seresRepository.save(existente);
     }
+
 
     // ------------------------ DELETE ------------------------
     public void deletar(Long id, Usuario usuarioAutenticado) {
@@ -135,29 +142,36 @@ public class SeresService {
     }
 
     // ------------------------ FILTRAGEM FLEXÍVEL ------------------------
-    public List<Seres> filtrarSeres(String nomeComum, Especie especie, StatusConservacao status) {
-        boolean temNome = nomeComum != null && !nomeComum.isEmpty();
-        boolean temEspecie = especie != null;
-        boolean temStatus = status != null;
+    public List<Seres> filtrarSeres(
+            String nomeComum,
+            List<Especie> especies,
+            StatusConservacao statusConservacao,
+            StatusAprovacao statusAprovacao
+    ) {
+        Specification<Seres> spec = (root, query, cb) -> null; // ponto inicial "vazio"
 
-        if (temNome && temEspecie && temStatus) {
-            return seresRepository.findByNomeComumContainingIgnoreCaseAndEspecieAndStatusConservacao(nomeComum, especie, status);
-        } else if (temNome && temEspecie) {
-            return seresRepository.findByNomeComumContainingIgnoreCaseAndEspecie(nomeComum, especie);
-        } else if (temNome && temStatus) {
-            return seresRepository.findByNomeComumContainingIgnoreCaseAndStatusConservacao(nomeComum, status);
-        } else if (temEspecie && temStatus) {
-            return seresRepository.findByEspecieAndStatusConservacao(especie, status);
-        } else if (temNome) {
-            return seresRepository.findByNomeComumContainingIgnoreCase(nomeComum);
-        } else if (temEspecie) {
-            return seresRepository.findByEspecie(especie);
-        } else if (temStatus) {
-            return seresRepository.findByStatusConservacao(status);
-        } else {
-            return seresRepository.findAll(Sort.by(Sort.Direction.ASC, "nomeComum"));
+        if (nomeComum != null && !nomeComum.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("nomeComum")), "%" + nomeComum.toLowerCase() + "%"));
         }
+
+        if (especies != null && !especies.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("especie").in(especies));
+        }
+
+        if (statusConservacao != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("statusConservacao"), statusConservacao));
+        }
+
+        if (statusAprovacao != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("statusAprovacao"), statusAprovacao));
+        }
+
+        return seresRepository.findAll(spec, Sort.by(Sort.Direction.ASC, "nomeComum"));
     }
+
 
     // ------------------------ HELPERS ------------------------
     public Usuario buscarUsuario(String login, String email) {

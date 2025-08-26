@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import plataforma.exticao.dtos.PerguntaComRespostasDTO;
 import plataforma.exticao.model.Pergunta;
 import plataforma.exticao.service.PerguntaService;
 
@@ -18,26 +19,26 @@ public class PerguntaController {
     @Autowired
     private PerguntaService perguntaService;
 
-    // Qualquer usuário pode listar todas as perguntas
+    // Listar todas as perguntas
     @GetMapping
     public List<Pergunta> listarTodos() {
         return perguntaService.listarTodos();
     }
 
-    // Qualquer usuário pode listar perguntas por quiz
+    // Listar perguntas por quiz
     @GetMapping("/quiz/{quizId}")
     public List<Pergunta> listarPorQuiz(@PathVariable Long quizId) {
         return perguntaService.listarPorQuizId(quizId);
     }
 
-    // Qualquer usuário pode buscar pergunta por id
+    // Buscar pergunta por id
     @GetMapping("/{id}")
     public ResponseEntity<Pergunta> buscarPorId(@PathVariable Long id) {
         Optional<Pergunta> pergunta = perguntaService.buscarPorId(id);
         return pergunta.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
-    // Somente admin pode criar perguntas
+    // Criar pergunta simples (somente admin)
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/criar")
     public ResponseEntity<?> criarPergunta(@RequestBody Pergunta pergunta) {
@@ -49,7 +50,19 @@ public class PerguntaController {
         }
     }
 
-    // Somente admin pode atualizar perguntas
+    // Criar pergunta com respostas via DTO (somente admin)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/criar-com-respostas")
+    public ResponseEntity<?> criarPerguntaComRespostas(@RequestBody PerguntaComRespostasDTO dto) {
+        try {
+            Pergunta pergunta = perguntaService.salvarComRespostas(dto);
+            return ResponseEntity.ok(pergunta);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Atualizar pergunta (somente admin)
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> atualizarPergunta(@PathVariable Long id, @RequestBody Pergunta perguntaAtualizada) {
@@ -63,7 +76,7 @@ public class PerguntaController {
         }
     }
 
-    // Somente admin pode deletar perguntas
+    // Deletar pergunta (somente admin)
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarPergunta(@PathVariable Long id) {

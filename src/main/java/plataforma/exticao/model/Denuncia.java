@@ -15,9 +15,10 @@ public class Denuncia {
     @Column(length = 2000)
     private String descricao;
 
-    @ManyToOne
-    @JoinColumn(name = "seres_id")
+    @ManyToOne(optional = true) // <-- permite null
+    @JoinColumn(name = "seres_id", nullable = true) // <-- coluna aceita null
     private Seres especie; // Relacionamento opcional com Seres
+
 
     @Lob
     @Column(columnDefinition = "LONGTEXT")

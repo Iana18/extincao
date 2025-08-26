@@ -11,6 +11,8 @@ public interface DenunciaRepository extends JpaRepository<Denuncia, Long> {
     @Override
     List<Denuncia> findAll();
     List<Denuncia> findByStatusAprovacao(StatusAprovacao statusAprovacao);
+    List<Denuncia> findByTituloContainingIgnoreCaseOrDescricaoContainingIgnoreCase(String titulo, String descricao);
+
 
 
 }

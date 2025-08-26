@@ -4,14 +4,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import plataforma.exticao.dtos.SeresRequestDTO;
+import plataforma.exticao.dtos.SeresListDTO;
 import plataforma.exticao.model.*;
 import plataforma.exticao.repository.CategoriaRepository;
 import plataforma.exticao.repository.EspecieRepository;
 import plataforma.exticao.repository.TipoRepository;
 import plataforma.exticao.service.SeresService;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/seres")
@@ -33,8 +36,7 @@ public class SeresController {
     // ------------------------ CREATE ------------------------
     @PostMapping("/registrar")
     public ResponseEntity<Seres> registrar(@RequestBody SeresRequestDTO dto) {
-        Seres novoSeres = seresService.registrar(dto);
-        return ResponseEntity.ok(novoSeres);
+        return ResponseEntity.ok(seresService.registrar(dto));
     }
 
     @PostMapping("/registrar-multipart")
@@ -51,54 +53,51 @@ public class SeresController {
             @RequestParam String usuarioEmail,
             @RequestParam(required = false) MultipartFile imagemFile
     ) {
-        // Buscar Tipo e Especie
-        Tipo tipoEntity = tipoRepository.findByNome(tipoNome)
-                .orElseThrow(() -> new RuntimeException("Tipo não encontrado"));
+        List<Tipo> tipos = tipoRepository.findByNomeInIgnoreCase(List.of(tipoNome));
+        if (tipos.isEmpty()) throw new RuntimeException("Tipo não encontrado");
+        Tipo tipoEntity = tipos.get(0);
 
-        Especie especieEntity = especieRepository.findByNome(especieNome)
-                .orElseThrow(() -> new RuntimeException("Espécie não encontrada"));
+        List<Especie> especies = especieRepository.findByNomeInIgnoreCase(List.of(especieNome));
+        if (especies.isEmpty()) throw new RuntimeException("Espécie não encontrada");
+        Especie especieEntity = especies.get(0);
 
-        // Buscar categoria automaticamente da espécie
-        Categoria categoria = especieEntity.getCategoria(); // Supondo que Especie tenha getCategoria()
-        if (categoria == null) {
-            throw new IllegalArgumentException("Categoria não encontrada para a espécie: " + especieNome);
-        }
+        Categoria categoria = especieEntity.getCategoria();
+        if (categoria == null) throw new IllegalArgumentException("Categoria não encontrada para a espécie");
 
-        // Registrar o Seres usando o service
         Seres novoSeres = seresService.registrarMultipart(
-                nomeComum,
-                nomeCientifico,
-                tipoEntity,
-                especieEntity,
-                descricao,
-                StatusConservacao.valueOf(statusConservacao),
-                latitude,
-                longitude,
-                usuarioLogin,
-                usuarioEmail,
-                imagemFile,
-                categoria
+                nomeComum, nomeCientifico, tipoEntity, especieEntity,
+                descricao, StatusConservacao.valueOf(statusConservacao),
+                latitude, longitude, usuarioLogin, usuarioEmail,
+                imagemFile, categoria
         );
 
         return ResponseEntity.ok(novoSeres);
     }
 
-
     // ------------------------ READ ------------------------
     @GetMapping
-    public ResponseEntity<List<Seres>> listarTodos() {
-        return ResponseEntity.ok(seresService.listarTodas());
+    public ResponseEntity<List<SeresListDTO>> listarTodos() {
+        List<SeresListDTO> dtos = seresService.listarTodas()
+                .stream()
+                .map(SeresListDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/pendentes")
-    public ResponseEntity<List<Seres>> listarPendentes() {
-        return ResponseEntity.ok(seresService.listarPendentes());
+    public ResponseEntity<List<SeresListDTO>> listarPendentes() {
+        List<SeresListDTO> dtos = seresService.listarPendentes()
+                .stream()
+                .map(SeresListDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Seres> buscarPorId(@PathVariable Long id) {
-        Optional<Seres> seres = seresService.buscarPorId(id);
-        return seres.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return seresService.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // ------------------------ UPDATE ------------------------
@@ -107,10 +106,8 @@ public class SeresController {
                                            @RequestBody SeresRequestDTO dto,
                                            @RequestParam String usuarioLogin,
                                            @RequestParam String usuarioEmail) {
-
         Usuario usuarioAutenticado = seresService.buscarUsuario(usuarioLogin, usuarioEmail);
-        Seres atualizado = seresService.atualizar(id, dto, usuarioAutenticado);
-        return ResponseEntity.ok(atualizado);
+        return ResponseEntity.ok(seresService.atualizar(id, dto, usuarioAutenticado));
     }
 
     // ------------------------ DELETE ------------------------
@@ -118,7 +115,6 @@ public class SeresController {
     public ResponseEntity<Void> deletar(@PathVariable Long id,
                                         @RequestParam String usuarioLogin,
                                         @RequestParam String usuarioEmail) {
-
         Usuario usuarioAutenticado = seresService.buscarUsuario(usuarioLogin, usuarioEmail);
         seresService.deletar(id, usuarioAutenticado);
         return ResponseEntity.noContent().build();
@@ -129,28 +125,93 @@ public class SeresController {
     public ResponseEntity<Seres> aprovar(@PathVariable Long id,
                                          @RequestParam String usuarioLogin,
                                          @RequestParam String usuarioEmail) {
-
         Usuario aprovadoPor = seresService.buscarUsuario(usuarioLogin, usuarioEmail);
-        Seres aprovado = seresService.aprovar(id, aprovadoPor);
-        return ResponseEntity.ok(aprovado);
+        return ResponseEntity.ok(seresService.aprovar(id, aprovadoPor));
     }
 
-    // ------------------------ FILTRAGEM ------------------------
+    // ------------------------ FILTRAGEM FLEXÍVEL ------------------------
     @GetMapping("/filtrar")
-    public ResponseEntity<List<Seres>> filtrar(@RequestParam(required = false) String nomeComum,
-                                               @RequestParam(required = false) String especie,
-                                               @RequestParam(required = false) String statusConservacao) {
-
-        Especie especieEntity = null;
-        if (especie != null) {
-            especieEntity = especieRepository.findByNome(especie)
-                    .orElseThrow(() -> new RuntimeException("Espécie não encontrada"));
+    public ResponseEntity<List<SeresListDTO>> filtrar(
+            @RequestParam(required = false) String nomeComum,
+            @RequestParam(required = false) String especie,
+            @RequestParam(required = false) String statusConservacao,
+            @RequestParam(required = false) String statusAprovacao) // <- adicionado
+    {
+        List<Especie> especies = null;
+        if (especie != null && !especie.isBlank()) {
+            especies = especieRepository.findByNomeInIgnoreCase(List.of(especie));
+            if (especies.isEmpty()) throw new RuntimeException("Espécie não encontrada");
         }
 
         StatusConservacao statusEnum = statusConservacao != null ? StatusConservacao.valueOf(statusConservacao) : null;
+        StatusAprovacao statusAprovEnum = statusAprovacao != null ? StatusAprovacao.valueOf(statusAprovacao) : null; // <- aqui converte string para enum
 
-        List<Seres> filtrados = seresService.filtrarSeres(nomeComum, especieEntity, statusEnum);
+        List<Seres> filtrados = seresService.filtrarSeres(nomeComum, especies, statusEnum, statusAprovEnum);
 
-        return ResponseEntity.ok(filtrados);
+        List<SeresListDTO> dtos = filtrados.stream()
+                .map(SeresListDTO::fromEntity)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
     }
+
+
+    // ------------------------ GET IMAGEM ------------------------
+    @GetMapping("/{id}/imagem")
+    public ResponseEntity<String> buscarImagem(@PathVariable Long id) {
+        return seresService.buscarPorId(id)
+                .map(s -> s.getImagem()) // imagem em Base64
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/atualizar-multipart")
+    public ResponseEntity<Seres> atualizarMultipart(
+            @PathVariable Long id,
+            @RequestParam String nomeComum,
+            @RequestParam String nomeCientifico,
+            @RequestParam String tipoNome,
+            @RequestParam String especieNome,
+            @RequestParam String descricao,
+            @RequestParam String statusConservacao,
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam String usuarioLogin,
+            @RequestParam String usuarioEmail,
+            @RequestParam(required = false) MultipartFile imagemFile
+    ) {
+        try {
+            Usuario usuarioAutenticado = seresService.buscarUsuario(usuarioLogin, usuarioEmail);
+
+            SeresRequestDTO dto = new SeresRequestDTO();
+            dto.setNomeComum(nomeComum);
+            dto.setNomeCientifico(nomeCientifico);
+
+            // Buscar Tipo
+            List<Tipo> tipos = tipoRepository.findByNomeInIgnoreCase(List.of(tipoNome));
+            if (tipos.isEmpty()) throw new RuntimeException("Tipo não encontrado");
+            dto.setTipo(tipos.get(0));
+
+            // Buscar Especie
+            List<Especie> especies = especieRepository.findByNomeInIgnoreCase(List.of(especieNome));
+            if (especies.isEmpty()) throw new RuntimeException("Espécie não encontrada");
+            dto.setEspecie(especies.get(0));
+
+            dto.setDescricao(descricao);
+            dto.setStatusConservacao(StatusConservacao.valueOf(statusConservacao));
+            dto.setLatitude(latitude);
+            dto.setLongitude(longitude);
+
+            // Converter imagem para Base64 se fornecida
+            if (imagemFile != null && !imagemFile.isEmpty()) {
+                dto.setImagem(Base64.getEncoder().encodeToString(imagemFile.getBytes()));
+            }
+
+            return ResponseEntity.ok(seresService.atualizar(id, dto, usuarioAutenticado));
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
 }

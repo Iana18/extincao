@@ -1,5 +1,6 @@
 package plataforma.exticao.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -13,11 +14,11 @@ public class Quiz {
     private Long id;
 
     private String titulo;
-
+    private int nivel;
     private LocalDateTime dataCriacao;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonIgnoreProperties ("quiz") // Ignora referência de volta ao quiz
     private List<Pergunta> perguntas = new ArrayList<>();
 
 
@@ -41,4 +42,12 @@ public class Quiz {
     public void setDataCriacao(LocalDateTime dataCriacao) { this.dataCriacao = dataCriacao; }
     public List<Pergunta> getPerguntas() { return perguntas; }
     public void setPerguntas(List<Pergunta> perguntas) { this.perguntas = perguntas; }
+
+    public int getNivel() {
+        return nivel;
+    }
+
+    public void setNivel(int nivel) {
+        this.nivel = nivel;
+    }
 }
