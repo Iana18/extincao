@@ -3,6 +3,7 @@ package plataforma.exticao.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import plataforma.exticao.dtos.SeresDetailDTO;
 import plataforma.exticao.dtos.SeresRequestDTO;
 import plataforma.exticao.dtos.SeresListDTO;
 import plataforma.exticao.model.*;
@@ -21,9 +22,9 @@ import java.util.stream.Collectors;
 public class SeresController {
 
     private final SeresService seresService;
-    private final TipoRepository tipoRepository;
-    private final EspecieRepository especieRepository;
+     private final EspecieRepository especieRepository;
     private final CategoriaRepository categoriaRepository;
+    private final TipoRepository tipoRepository;
 
     public SeresController(SeresService seresService, CategoriaRepository categoriaRepository,
                            EspecieRepository especieRepository, TipoRepository tipoRepository) {
@@ -93,12 +94,14 @@ public class SeresController {
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Seres> buscarPorId(@PathVariable Long id) {
+    @GetMapping("/{id}/detalhes")
+    public ResponseEntity<SeresDetailDTO> buscarDetalhesPorId(@PathVariable Long id) {
         return seresService.buscarPorId(id)
+                .map(SeresDetailDTO::fromEntity)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
 
     // ------------------------ UPDATE ------------------------
     @PutMapping("/{id}")

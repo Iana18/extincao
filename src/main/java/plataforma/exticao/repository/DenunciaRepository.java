@@ -14,5 +14,6 @@ public interface DenunciaRepository extends JpaRepository<Denuncia, Long> {
     List<Denuncia> findByTituloContainingIgnoreCaseOrDescricaoContainingIgnoreCase(String titulo, String descricao);
 
 
+    List<Denuncia> findAllByOrderByDataDenunciaDesc();
 
 }

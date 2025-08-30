@@ -67,8 +67,6 @@ public class Seres {
 
     private Double latitude;
     private Double longitude;
-    @OneToMany(mappedBy = "especie", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Denuncia> denuncias;
 
     public Seres() {}
 
@@ -76,7 +74,7 @@ public class Seres {
                  StatusConservacao statusConservacao, String imagem, LocalDateTime dataRegistro,
                  StatusAprovacao statusAprovacao, LocalDateTime dataAprovacao,
                  Usuario registradoPor, Usuario aprovadoPor, Double latitude, Double longitude,
-                 List<Denuncia> denuncias, Tipo tipo,Categoria categoria ) {
+                  Tipo tipo,Categoria categoria ) {
         this.nomeComum = nomeComum;
         this.nomeCientifico = nomeCientifico;
 
@@ -90,7 +88,7 @@ public class Seres {
         this.aprovadoPor = aprovadoPor;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.denuncias = denuncias;
+
         this.tipo = tipo;
         this.categoria = categoria;
     }
@@ -241,13 +239,6 @@ public class Seres {
         this.latitude = latitude;
     }
 
-    public List<Denuncia> getDenuncias() {
-        return denuncias;
-    }
-
-    public void setDenuncias(List<Denuncia> denuncias) {
-        this.denuncias = denuncias;
-    }
 
     public Especie getEspecie() {
         return especie;

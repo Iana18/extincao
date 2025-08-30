@@ -1,87 +1,72 @@
 package plataforma.exticao.controller;
 
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import plataforma.exticao.dtos.ComentarioResponseDTO;
 import plataforma.exticao.dtos.ComentarioUpdateRequestDTO;
 import plataforma.exticao.model.Comentario;
-import plataforma.exticao.model.Usuario;
+import plataforma.exticao.repository.ComentarioRepository;
+import plataforma.exticao.repository.UsuarioRepository;
 import plataforma.exticao.service.ComentarioService;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/comentarios")
-//@CrossOrigin(origins = "*")
 public class ComentarioController {
 
     private final ComentarioService comentarioService;
+    private  final ComentarioRepository comentarioRepository;
 
-    public ComentarioController(ComentarioService comentarioService) {
+    public ComentarioController(ComentarioService comentarioService, ComentarioRepository comentarioRepository) {
         this.comentarioService = comentarioService;
+        this.comentarioRepository = comentarioRepository;
     }
 
-    @PostMapping("/criar")
-    public ResponseEntity<Comentario> salvar(@RequestBody Comentario comentario) {
-        return ResponseEntity.ok(comentarioService.salvar(comentario));
-    }
-
+    // Listar comentários de uma espécie
     @GetMapping("/especie/{especieId}")
-    public List<Comentario> listarPorEspecie(@PathVariable Long especieId) {
-        return comentarioService.listarPorEspecie(especieId);
+    public ResponseEntity<List<ComentarioResponseDTO>> listarComentarios(@PathVariable Long especieId) {
+        List<Comentario> comentarios = comentarioService.listarPorEspecie(especieId);
+
+        List<ComentarioResponseDTO> comentariosDTO = comentarios.stream()
+                .map(comentarioService::toDTO) // converte para DTO (só login do autor)
+                .toList();
+
+        return ResponseEntity.ok(comentariosDTO);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Comentario> buscarPorId(@PathVariable Long id) {
-        return comentarioService.buscarPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    // Criar comentário
+    @PostMapping("/criar")
+    public ResponseEntity<ComentarioResponseDTO> criarComentario(
+            @RequestBody Comentario comentario,
+            @RequestParam String usuarioLogin
+    ) {
+        Comentario salvo = comentarioService.salvar(comentario, usuarioLogin);
+        return ResponseEntity.ok(comentarioService.toDTO(salvo));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        comentarioService.deletar(id);
-        return ResponseEntity.noContent().build();
-    }
-
-
-
+    // Atualizar comentário (só autor pode)
+// Atualizar comentário (só autor pode)
     @PutMapping("/{id}")
-    public ResponseEntity<?> atualizar(
+    public ResponseEntity<?> atualizarComentario(
             @PathVariable Long id,
-            @RequestBody @Valid ComentarioUpdateRequestDTO comentarioUpdateRequestDTO) {
+            @RequestBody ComentarioUpdateRequestDTO updateDTO,
+            @RequestParam String autorLogin
+    ) {
+        Optional<Comentario> atualizado = comentarioService.atualizar(id, updateDTO, autorLogin);
 
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String usuarioIdAutenticado;
-
-        if (principal instanceof Usuario usuario) {
-            usuarioIdAutenticado = usuario.getId();
+        if (atualizado.isPresent()) {
+            // Retorna o DTO do comentário atualizado
+            ComentarioResponseDTO dto = comentarioService.toDTO(atualizado.get());
+            return ResponseEntity.ok(dto);
         } else {
-            return ResponseEntity.status(401).body("Usuário não autenticado");
-        }
-
-        Optional<Comentario> comentarioAtualizado = comentarioService.atualizar(id, comentarioUpdateRequestDTO, usuarioIdAutenticado);
-
-        if (comentarioAtualizado.isPresent()) {
-            Comentario comentario = comentarioAtualizado.get();
-
-            ComentarioResponseDTO responseDTO = new ComentarioResponseDTO(
-                    comentario.getId(),
-                    comentario.getTexto(),
-                    comentario.getDataComentario(),
-                    comentario.getEspecie().getId(),
-                    comentario.getAutor().getId()
-            );
-
-            return ResponseEntity.ok(responseDTO);
-        } else {
-            return ResponseEntity.status(403).body("Não autorizado para atualizar esse comentário");
+            // Retorna erro caso o usuário não seja o autor
+            return ResponseEntity.status(403)
+                    .body("Você só pode atualizar seus próprios comentários");
         }
     }
+
 
 
 }

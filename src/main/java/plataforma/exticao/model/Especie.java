@@ -12,7 +12,7 @@ public class Especie {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nome;        // Ex: Leão, Rosa
+    private String nome;
     private String descricao;
 
     @ManyToOne
@@ -23,6 +23,10 @@ public class Especie {
     @OneToMany(mappedBy = "especie", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Tipo> tipos;
+
+    @OneToMany(mappedBy = "especie", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Denuncia> denuncias;
 
     // Getters e Setters
     public Long getId() { return id; }
@@ -39,4 +43,12 @@ public class Especie {
 
     public List<Tipo> getTipos() { return tipos; }
     public void setTipos(List<Tipo> tipos) { this.tipos = tipos; }
+
+    public List<Denuncia> getDenuncias() {
+        return denuncias;
+    }
+
+    public void setDenuncias(List<Denuncia> denuncias) {
+        this.denuncias = denuncias;
+    }
 }

@@ -1,5 +1,6 @@
 package plataforma.exticao.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -16,6 +17,8 @@ public class Comentario {
     private LocalDateTime dataComentario;
 
     @ManyToOne
+    @JoinColumn(name="usuario_id")
+    @JsonBackReference // Ignora a referência de volta do usuário
     private Usuario autor;
 
     @ManyToOne

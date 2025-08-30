@@ -2,12 +2,10 @@ package plataforma.exticao.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import plataforma.exticao.dtos.DenunciaCreateRequestDTO;
-import plataforma.exticao.dtos.DenunciaResponseDTO;
-import plataforma.exticao.dtos.EspecieRequestDTO;
-import plataforma.exticao.dtos.UsuarioResponseDTO;
+import plataforma.exticao.dtos.*;
 import plataforma.exticao.model.*;
 import plataforma.exticao.repository.DenunciaRepository;
+import plataforma.exticao.repository.EspecieRepository;
 import plataforma.exticao.repository.UsuarioRepository;
 
 import java.time.LocalDateTime;
@@ -21,10 +19,12 @@ public class DenunciaService {
 
     private final DenunciaRepository denunciaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final EspecieRepository especieRepository;
 
-    public DenunciaService(DenunciaRepository denunciaRepository, UsuarioRepository usuarioRepository) {
+    public DenunciaService(DenunciaRepository denunciaRepository, EspecieRepository especieRepository, UsuarioRepository usuarioRepository) {
         this.denunciaRepository = denunciaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.especieRepository = especieRepository;
     }
 
     // ------------------------ CREATE ------------------------
@@ -56,8 +56,8 @@ public class DenunciaService {
         denuncia.setStatusAprovacao(StatusAprovacao.PENDENTE);
 
         if (especieId != null) {
-            Seres especie = new Seres();
-            especie.setId(especieId);
+            Especie especie = especieRepository.findById(especieId)
+                    .orElseThrow(() -> new RuntimeException("Espécie não encontrada com ID: " + especieId));
             denuncia.setEspecie(especie);
         }
 
@@ -80,8 +80,8 @@ public class DenunciaService {
         denuncia.setDenunciadoPor(denunciante);
 
         if (dto.getEspecieId() != null) {
-            Seres especie = new Seres();
-            especie.setId(dto.getEspecieId());
+            Especie especie = especieRepository.findById(dto.getEspecieId())
+                    .orElseThrow(() -> new RuntimeException("Espécie não encontrada com ID: " + dto.getEspecieId()));
             denuncia.setEspecie(especie);
         }
 
@@ -138,16 +138,34 @@ public class DenunciaService {
         return denunciaRepository.save(denuncia);
     }
 
-    public Denuncia aprovarDenuncia(Long id, Usuario usuarioAutenticado) {
-        return atualizarStatus(id, StatusAprovacao.APROVADO, usuarioAutenticado);
-    }
+    // ------------------------ UPDATE DENUNCIA ------------------------
+    public Denuncia atualizar(Long id, DenunciaUpdateRequestDTO dto, Usuario usuario) {
+        Denuncia denuncia = denunciaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Denúncia não encontrada"));
 
-    public Denuncia rejeitarDenuncia(Long id, Usuario usuarioAutenticado) {
-        return atualizarStatus(id, StatusAprovacao.REJEITADA, usuarioAutenticado);
-    }
+        // Verifica se o usuário é o dono ou tem permissão
+        if (!denuncia.getDenunciadoPor().equals(usuario)) {
+            throw new RuntimeException("Usuário não autorizado para atualizar esta denúncia");
+        }
 
-    public Denuncia resolverDenuncia(Long id, Usuario usuarioAutenticado) {
-        return atualizarStatus(id, StatusAprovacao.RESOLVIDA, usuarioAutenticado);
+        if (dto.getTitulo() != null) {
+            denuncia.setTitulo(dto.getTitulo());
+        }
+
+        if (dto.getDescricao() != null) {
+            denuncia.setDescricao(dto.getDescricao());
+        }
+
+        if (dto.getEspecie() != null) {
+            // Busca a espécie pelo nome (retorna Optional)
+            Especie especieAtualizada = especieRepository.findByNomeIgnoreCase(dto.getEspecie().getNome())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Espécie não encontrada: " + dto.getEspecie().getNome()));
+
+            denuncia.setEspecie(especieAtualizada);
+        }
+
+        return denunciaRepository.save(denuncia);
     }
 
     // ------------------------ DELETE ------------------------
@@ -178,48 +196,51 @@ public class DenunciaService {
         dto.setLatitude(denuncia.getLatitude());
         dto.setLongitude(denuncia.getLongitude());
 
-        if (denuncia.getEspecie() != null && denuncia.getEspecie().getEspecie() != null) {
-            Seres seres = denuncia.getEspecie();
-
+        if (denuncia.getEspecie() != null) {
+            Especie especie = denuncia.getEspecie();
             EspecieRequestDTO especieDto = new EspecieRequestDTO();
-            especieDto.setId(seres.getEspecie().getId());
-
-            if (seres.getEspecie().getCategoria() != null) {
-                especieDto.setCategoriaId(seres.getEspecie().getCategoria().getId());
+            especieDto.setId(especie.getId());
+            if (especie.getCategoria() != null) {
+                especieDto.setCategoriaId(especie.getCategoria().getId());
             }
-
-            especieDto.setNome(seres.getEspecie().getNome());
-            especieDto.setDescricao(seres.getEspecie().getDescricao());
+            especieDto.setNome(especie.getNome());
+            especieDto.setDescricao(especie.getDescricao());
             dto.setEspecie(especieDto);
         }
 
         if (denuncia.getDenunciadoPor() != null) {
             Usuario u = denuncia.getDenunciadoPor();
             dto.setDenunciadoPor(new UsuarioResponseDTO(
-                    u.getId(),
-                    u.getLogin(),
-                    u.getEmail(),
-                    u.getNomeCompleto(),
-                    u.getRole(),
-                    u.getNivelAtual(),
-                    u.getQuizzesCompletos()
+                    u.getId(), u.getLogin(), u.getEmail(),
+                    u.getNomeCompleto(), u.getRole(),
+                    u.getNivelAtual(), u.getQuizzesCompletos()
             ));
         }
 
         if (denuncia.getAprovadoPor() != null) {
             Usuario u = denuncia.getAprovadoPor();
             dto.setAprovadoPor(new UsuarioResponseDTO(
-                    u.getId(),
-                    u.getLogin(),
-                    u.getEmail(),
-                    u.getNomeCompleto(),
-                    u.getRole(),
-                    u.getNivelAtual(),
-                    u.getQuizzesCompletos()
+                    u.getId(), u.getLogin(), u.getEmail(),
+                    u.getNomeCompleto(), u.getRole(),
+                    u.getNivelAtual(), u.getQuizzesCompletos()
             ));
         }
 
         return dto;
+    }
+
+
+    // ------------------------ STATUS HELPERS ------------------------
+    public Denuncia aprovarDenuncia(Long id, Usuario usuarioAutenticado) {
+        return atualizarStatus(id, StatusAprovacao.APROVADO, usuarioAutenticado);
+    }
+
+    public Denuncia rejeitarDenuncia(Long id, Usuario usuarioAutenticado) {
+        return atualizarStatus(id, StatusAprovacao.REJEITADA, usuarioAutenticado);
+    }
+
+    public Denuncia resolverDenuncia(Long id, Usuario usuarioAutenticado) {
+        return atualizarStatus(id, StatusAprovacao.RESOLVIDA, usuarioAutenticado);
     }
 
     private void validarUsuarioAdmin(Usuario usuario) {

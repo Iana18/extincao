@@ -4,6 +4,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import plataforma.exticao.dtos.SeresDetailDTO;
 import plataforma.exticao.dtos.SeresRequestDTO;
 import plataforma.exticao.model.*;
 import plataforma.exticao.repository.EspecieRepository;
@@ -31,13 +32,13 @@ public class SeresService {
     }
 
     // ------------------------ CREATE ------------------------
+    // ------------------------ CREATE ------------------------
     public Seres registrar(SeresRequestDTO dto) {
         validarLocalizacao(dto.getLatitude(), dto.getLongitude());
 
-        Usuario usuario = dto.getRegistradoPor();
-        if (usuario == null) {
-            throw new IllegalArgumentException("Usuário registrado é obrigatório.");
-        }
+        // Buscar usuário (obrigatório)
+        Usuario usuario = buscarUsuario(dto.getRegistradoPor().getLogin(),
+                dto.getRegistradoPor().getEmail());
 
         Seres seres = buildSeresFromDTO(dto, usuario);
         return seresRepository.save(seres);
@@ -49,6 +50,8 @@ public class SeresService {
                                     MultipartFile imagemFile, Categoria categoria) {
 
         validarLocalizacao(latitude, longitude);
+
+        // Sempre precisa do usuário
         Usuario registradoPor = buscarUsuario(usuarioLogin, usuarioEmail);
 
         Seres seres = new Seres();
@@ -61,7 +64,7 @@ public class SeresService {
         seres.setStatusConservacao(statusConservacao);
         seres.setLatitude(latitude);
         seres.setLongitude(longitude);
-        seres.setRegistradoPor(registradoPor);
+        seres.setRegistradoPor(registradoPor); // <- usuário vinculado
         seres.setDataRegistro(LocalDateTime.now());
         seres.setStatusAprovacao(StatusAprovacao.PENDENTE);
 
@@ -89,8 +92,6 @@ public class SeresService {
     public Optional<Seres> buscarPorId(Long id) {
         return seresRepository.findById(id);
     }
-
-    // ------------------------ UPDATE ------------------------
     public Seres atualizar(Long id, SeresRequestDTO dto, Usuario usuarioAutenticado) {
         if (usuarioAutenticado.getRole() != UserRole.ADMIN) {
             throw new SecurityException("Usuário não autorizado a atualizar espécies.");
@@ -102,6 +103,12 @@ public class SeresService {
         existente.setNomeComum(dto.getNomeComum());
         existente.setNomeCientifico(dto.getNomeCientifico());
         existente.setTipo(dto.getTipo());
+
+        // Atualizar espécie
+        if (dto.getEspecie() != null) {
+            existente.setEspecie(dto.getEspecie());
+        }
+
         existente.setCategoria(dto.getEspecie() != null ? dto.getEspecie().getCategoria() : existente.getCategoria());
         existente.setDescricao(dto.getDescricao());
         existente.setStatusConservacao(dto.getStatusConservacao());
@@ -213,4 +220,11 @@ public class SeresService {
             throw new IllegalArgumentException("Localização (latitude e longitude) é obrigatória.");
         }
     }
+
+    public SeresDetailDTO buscarDetalhesDTO(Long id) {
+        return buscarPorId(id)
+                .map(SeresDetailDTO::fromEntity) // converte Seres -> SeresDetailDTO
+                .orElse(null);
+    }
+
 }

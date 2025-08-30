@@ -8,47 +8,44 @@ public class SeresDetailDTO extends SeresListDTO {
     public String getImagem() { return imagem; }
     public void setImagem(String imagem) { this.imagem = imagem; }
 
-    public static SeresListDTO fromEntity(Seres s) {
-        SeresListDTO dto = new SeresListDTO();
+    public static SeresDetailDTO fromEntity(Seres s) {
+        SeresDetailDTO dto = new SeresDetailDTO(); // agora é do tipo correto
+
         dto.setId(s.getId());
         dto.setNomeComum(s.getNomeComum());
         dto.setNomeCientifico(s.getNomeCientifico());
+        dto.setDescricao(s.getDescricao());
+        dto.setStatusConservacao(s.getStatusConservacao());
+        dto.setStatusAprovacao(s.getStatusAprovacao());
+        dto.setLatitude(s.getLatitude());
+        dto.setLongitude(s.getLongitude());
+        dto.setImagem(s.getImagem()); // imagem Base64
+        dto.setRegistradoPor(s.getRegistradoPor());
+        dto.setAprovadoPor(s.getAprovadoPor());
 
-        // Criar DTO do tipo
         if (s.getTipo() != null) {
             TipoRequestDTO tipoDto = new TipoRequestDTO();
             tipoDto.setNome(s.getTipo().getNome());
             dto.setTipo(tipoDto);
         }
 
-        // Criar DTO da espécie
         if (s.getEspecie() != null) {
             EspecieRequestDTO especieDto = new EspecieRequestDTO();
-            especieDto.setNome(s.getEspecie().getNome());
             especieDto.setId(s.getEspecie().getId());
+            especieDto.setNome(s.getEspecie().getNome());
             dto.setEspecie(especieDto);
 
-            // Categoria da espécie
             if (s.getEspecie().getCategoria() != null) {
                 CategoriaRequestDTO categoriaDto = new CategoriaRequestDTO();
                 categoriaDto.setNome(s.getEspecie().getCategoria().getNome());
-
                 dto.setCategoria(categoriaDto);
             }
         }
 
-        dto.setStatusConservacao(s.getStatusConservacao());
-        dto.setStatusAprovacao(s.getStatusAprovacao());
-        dto.setRegistradoPor(s.getRegistradoPor());
-        dto.setAprovadoPor(s.getAprovadoPor());
-        dto.setLongitude(s.getLongitude());
-        dto.setLatitude(s.getLatitude());
-        dto.setDescricao(s.getDescricao());
-        dto.setDataAprovacao(s.getDataAprovacao());
         dto.setDataRegistro(s.getDataRegistro());
+        dto.setDataAprovacao(s.getDataAprovacao());
 
         return dto;
     }
-
 
 }

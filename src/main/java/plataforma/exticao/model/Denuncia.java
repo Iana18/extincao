@@ -1,5 +1,6 @@
 package plataforma.exticao.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -15,10 +16,11 @@ public class Denuncia {
     @Column(length = 2000)
     private String descricao;
 
-    @ManyToOne(optional = true) // <-- permite null
-    @JoinColumn(name = "seres_id", nullable = true) // <-- coluna aceita null
-    private Seres especie; // Relacionamento opcional com Seres
-
+    // Relacionamento direto com a espécie denunciada
+    @ManyToOne
+    @JoinColumn(name = "especie_id") // FK para a tabela Especie
+    @JsonBackReference
+    private Especie especie;
 
     @Lob
     @Column(columnDefinition = "LONGTEXT")
@@ -51,7 +53,7 @@ public class Denuncia {
     // 🔹 Construtor completo
     public Denuncia(String titulo, String descricao, StatusAprovacao statusAprovacao,
                     LocalDateTime dataDenuncia, LocalDateTime dataAprovacao,
-                    Usuario denunciadoPor, Usuario aprovadoPor, Seres especie,
+                    Usuario denunciadoPor, Usuario aprovadoPor, Especie especie,
                     String imagem, Double latitude, Double longitude) {
         this.titulo = titulo;
         this.descricao = descricao;
@@ -79,8 +81,8 @@ public class Denuncia {
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public Seres getEspecie() { return especie; }
-    public void setEspecie(Seres especie) { this.especie = especie; }
+    public Especie getEspecie() { return especie; }
+    public void setEspecie(Especie especie) { this.especie = especie; }
 
     public String getImagem() { return imagem; }
     public void setImagem(String imagem) { this.imagem = imagem; }
